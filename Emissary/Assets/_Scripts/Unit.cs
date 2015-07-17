@@ -5,11 +5,13 @@ using System;
 public class Unit : MonoBehaviour
 {
 
-    public Transform target;
+    //public Transform target;
     float speed = 5;
     Vector3[] path;
     int targetIndex;
     public bool selected;
+    public float maxHealth = 100f;
+    public float health;
 
     void Start()
     {
@@ -39,10 +41,12 @@ public class Unit : MonoBehaviour
     internal void Deselect()
     {
         selected = false;
+        gameObject.GetComponentInChildren<SpriteRenderer>().enabled = false;
     }
     internal void Select()
     {
         selected = true;
+        gameObject.GetComponentInChildren<SpriteRenderer>().enabled = true;
     }
     IEnumerator FollowPath()
     {
@@ -89,4 +93,5 @@ public class Unit : MonoBehaviour
             }
         }
     }
+
 }
