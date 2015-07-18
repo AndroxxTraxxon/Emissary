@@ -6,14 +6,18 @@ using System;
 public class InputManager : MonoBehaviour {
 
     public int playerID = 0;
-    public Camera cam;
     private List<Unit> selectedUnits;
+    private List<Unit> selectableUnits;
+
     private RaycastHit hit;
     private bool mouseDownLastFrame = false;
     private bool boxSelection = false;
     private Rect selectionBox = new Rect();
     private Vector3 initMousePosition;
-    private List<Unit> selectableUnits;
+
+
+    private float lastClickTime = 0;
+    private const float doubleClickTime = .25f;
 
     public static InputManager instance;
 
@@ -26,39 +30,65 @@ public class InputManager : MonoBehaviour {
     void Update(){
 
         #region Mouse Clicked
-        if (Physics.Raycast(cam.ScreenPointToRay(Input.mousePosition), out hit))
+        Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit);
         //note: hit gets updated every frame here. no need to do it again! 
         //This also means that I can reference it wherever I want at any time.
+
+        //LeftMouseButtonInput
+        if (Input.GetMouseButtonDown(0))
         {
-            //LeftMouseButtonInput
-            if (Input.GetMouseButtonDown(0))
+            
+            //If the shift button isn't pressed, then not multiple select.
+            if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
             {
-                //If the shift button isn't pressed, then not multiple select.
-                if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
-                {
-                    ClearUnitList();
-                }
-
-                mouseDownLastFrame = true;
-                initMousePosition = Input.mousePosition;
-
+                ClearUnitList();
             }
-            //Right Mouse Button Input
-            else if (Input.GetMouseButtonDown(1))
+
+            if (Time.time - lastClickTime < doubleClickTime)
             {
-                foreach (Unit go in selectedUnits)
+                //do double click things
+                if (hit.collider.gameObject.GetComponent<Unit>() != null)
                 {
-                    go.RequestPathFromManager(hit.point);
+                    Unit currentUnit = hit.collider.gameObject.GetComponent<Unit>();
+                    foreach (Unit unit in selectableUnits)
+                    {
+                        if (unit.GetComponent<Renderer>().isVisible && unit.UnitID.Equals(currentUnit.UnitID))
+                        {
+                            AddUnitToSelection(unit);
+                        }
+                    } 
                 }
+            }
+            else
+            {
+                AddUnitToSelection(hit.collider.gameObject.GetComponent<Unit>());
+                lastClickTime = Time.time;
+            }
+
+        //end left mouse button input
+            mouseDownLastFrame = true;
+            initMousePosition = Input.mousePosition;
+        //Right Mouse Button Input
+
+        }
+        else if (Input.GetMouseButtonDown(1))
+        {
+            foreach (Unit go in selectedUnits)
+            {
+                go.RequestPathFromManager(hit.point);
             }
         }
+
         //Basically, if you're holding the left mouse down, and you're dragging the mouse, begin a box selection
         if (Input.GetMouseButton(0) && mouseDownLastFrame)
         {
-            if ((Input.mousePosition - initMousePosition).magnitude > .5f)
+            if ((Input.mousePosition - initMousePosition).magnitude > 25)
             {
                 showSelectionBox(Input.mousePosition, initMousePosition);
                 boxSelection = true;
+            }else
+            {
+                boxSelection = false;
             }
         } 
         #endregion
@@ -73,20 +103,14 @@ public class InputManager : MonoBehaviour {
         {
             if (boxSelection)
             {
-                //if the multiple selection box has been activated, do a box selection.
-                SelectMultipleObjects(Input.mousePosition, initMousePosition);
-            }
-            else
-            {
-                //Only adding the GameObject to the units list if it's actually a Unit.
                 if (hit.collider.gameObject.GetComponent<Unit>() != null)
-                {
-                    selectedUnits.Add(hit.collider.gameObject.GetComponent<Unit>());
-                    hit.collider.gameObject.GetComponent<Unit>().Select();
-                }
+                    RemoveLastSelectedUnit();
+                    //if the multiple selection box has been activated, do a box selection.
+                    SelectMultipleObjects(Input.mousePosition, initMousePosition);
             }
             boxSelection = false;
         } 
+
         #endregion
 
         //had to use this statement in the case that the mouse moves outside the window. Otherwise, the mouse can exit the window, release, re-enter, and the GetMouseButtonUp() is never called.
@@ -96,6 +120,7 @@ public class InputManager : MonoBehaviour {
         }
 
 
+        #region Keyboard Input
         //Keyboard-Explicit controls begin here.
         //Shift-Key Combo Functions
         if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
@@ -107,6 +132,7 @@ public class InputManager : MonoBehaviour {
         {
             if (Input.GetKey(KeyCode.E))
             {
+
                 ClearUnitList();
                 foreach (Unit go in selectableUnits)
                 {
@@ -116,6 +142,10 @@ public class InputManager : MonoBehaviour {
 
             if (Input.GetKey(KeyCode.A))
             {
+                if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
+                {
+                    ClearUnitList();
+                }
                 foreach (Unit go in selectableUnits)
                 {
                     if (go.type == Unit.VehicleType.AIR)
@@ -125,6 +155,10 @@ public class InputManager : MonoBehaviour {
 
             if (Input.GetKey(KeyCode.G))
             {
+                if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
+                {
+                    ClearUnitList();
+                }
                 foreach (Unit go in selectableUnits)
                 {
                     if (go.type == Unit.VehicleType.GROUND)
@@ -134,6 +168,10 @@ public class InputManager : MonoBehaviour {
 
             if (Input.GetKey(KeyCode.W))
             {
+                if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
+                {
+                    ClearUnitList();
+                }
                 foreach (Unit go in selectableUnits)
                 {
                     if (go.type == Unit.VehicleType.WATER)
@@ -144,20 +182,21 @@ public class InputManager : MonoBehaviour {
         }
 
         //
-        if (Input.GetKeyDown(KeyCode.Escape)){
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
             ClearUnitList();
-        } 
+        }  
+        #endregion
     }
 
     private void showSelectionBox(Vector3 currentPos, Vector3 originalPos)
     {
+        
+        selectionBox = new Rect((Mathf.Min(originalPos.x, currentPos.x)), Screen.height-Mathf.Max(originalPos.y, currentPos.y),
+                              Mathf.Abs(originalPos.x - currentPos.x), Mathf.Abs(originalPos.y - currentPos.y));
         boxSelection = true;
-        selectionBox = new Rect((Mathf.Min(originalPos.x, currentPos.x)), Screen.height-Mathf.Min(originalPos.y, currentPos.y),
-                              Mathf.Abs(originalPos.x - currentPos.x), -Mathf.Abs(originalPos.y - currentPos.y));
     }
 
-    
-    //this is just for debug!
     void OnDrawGizmos()
     {
         Gizmos.DrawRay(hit.point, Vector3.up);
@@ -169,25 +208,29 @@ public class InputManager : MonoBehaviour {
         foreach (Unit go in selectableUnits) //represents all the movable units
         {
             Vector3 screenCoordinates = Camera.main.WorldToScreenPoint(go.transform.position);//convert the current object position to screen coordinates
-
+            screenCoordinates.y = Screen.height - screenCoordinates.y;
             //Find all the objects inside the box
-            if ((screenCoordinates.x < originalPos.x && screenCoordinates.x > currentPos.x) && (screenCoordinates.y > originalPos.y && screenCoordinates.y < currentPos.y))
+            if (selectionBox.Contains(screenCoordinates))
             {
                 if (!selectedUnits.Contains(go))
                 {
                     AddUnitToSelection(go);
+                    go.Select();
                 }
             }
         }
     }
 
     private void AddUnitToSelection(Unit unit){
-        if(selectableUnits.Contains(unit)){
+        if(selectableUnits.Contains(unit) && !selectedUnits.Contains(unit)){
             selectedUnits.Add(unit);
             unit.GetComponent<Unit>().Select();
         }
     }
-
+    private void RemoveLastSelectedUnit()
+    {
+        selectedUnits.RemoveAt(selectedUnits.Count - 1);
+    }
     private void ClearUnitList()
         {
             foreach (Unit go in selectedUnits)
@@ -208,7 +251,9 @@ public class InputManager : MonoBehaviour {
     {
         if (boxSelection)
         {
-            GUI.Box(selectionBox, "Unit Selection");
+            GUI.Box(selectionBox, "");
         }
     }
+
+
 }

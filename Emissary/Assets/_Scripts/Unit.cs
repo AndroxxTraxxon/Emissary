@@ -6,7 +6,8 @@ public class Unit : MonoBehaviour
 {
 
     //public Transform target;
-    public enum VehicleType { AIR, WATER, GROUND, BUILDING};
+    public enum VehicleType { AIR, WATER, GROUND, BUILDING, Constructor};
+    public string UnitID;
 
     float speed = 5;
     Vector3[] path;
