@@ -1,0 +1,32 @@
+Mono path[0] = 'C:/Users/David/Documents/GitHubVisualStudio/Emissary/Emissary/Build/Development/0.0.3/Emissary_0.0.3_Data/Managed'
+Mono path[1] = 'C:/Users/David/Documents/GitHubVisualStudio/Emissary/Emissary/Build/Development/0.0.3/Emissary_0.0.3_Data/Mono'
+Mono config path = 'C:/Users/David/Documents/GitHubVisualStudio/Emissary/Emissary/Build/Development/0.0.3/Emissary_0.0.3_Data/Mono/etc'
+PlayerConnection initialized from C:/Users/David/Documents/GitHubVisualStudio/Emissary/Emissary/Build/Development/0.0.3/Emissary_0.0.3_Data (debug = 0)
+PlayerConnection initialized network socket : 0.0.0.0 55104
+Multi-casting "[IP] 10.65.0.10 [Port] 55104 [Flags] 2 [Guid] 1932103252 [EditorId] 1739109014 [Version] 1048832 [Id] WindowsPlayer(Win10-Culbreth) [Debug] 0" to [225.0.0.222:54997]...
+PlayerConnection already initialized - listening to [10.65.0.10:55104]
+Initialize engine version: 5.1.0f3 (ec70b008569d)
+GfxDevice: creating device client; threaded=1
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.0]
+    Renderer: AMD Radeon (TM) R7 370 Series (Engineering Sample - WDDM v2.0) (ID=0x6811)
+    Vendor:   ATI
+    VRAM:     3072 MB
+Begin MonoManager ReloadAssembly
+Platform assembly: C:\Users\David\Documents\GitHubVisualStudio\Emissary\Emissary\Build\Development\0.0.3\Emissary_0.0.3_Data\Managed\UnityEngine.dll (this message is harmless)
+Loading C:\Users\David\Documents\GitHubVisualStudio\Emissary\Emissary\Build\Development\0.0.3\Emissary_0.0.3_Data\Managed\UnityEngine.dll into Unity Child Domain
+Platform assembly: C:\Users\David\Documents\GitHubVisualStudio\Emissary\Emissary\Build\Development\0.0.3\Emissary_0.0.3_Data\Managed\Assembly-CSharp.dll (this message is harmless)
+Loading C:\Users\David\Documents\GitHubVisualStudio\Emissary\Emissary\Build\Development\0.0.3\Emissary_0.0.3_Data\Managed\Assembly-CSharp.dll into Unity Child Domain
+Platform assembly: C:\Users\David\Documents\GitHubVisualStudio\Emissary\Emissary\Build\Development\0.0.3\Emissary_0.0.3_Data\Managed\UnityEngine.UI.dll (this message is harmless)
+Loading C:\Users\David\Documents\GitHubVisualStudio\Emissary\Emissary\Build\Development\0.0.3\Emissary_0.0.3_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
+Platform assembly: C:\Users\David\Documents\GitHubVisualStudio\Emissary\Emissary\Build\Development\0.0.3\Emissary_0.0.3_Data\Managed\UnityEngine.Networking.dll (this message is harmless)
+Loading C:\Users\David\Documents\GitHubVisualStudio\Emissary\Emissary\Build\Development\0.0.3\Emissary_0.0.3_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
+Platform assembly: C:\Users\David\Documents\GitHubVisualStudio\Emissary\Emissary\Build\Development\0.0.3\Emissary_0.0.3_Data\Managed\UnityEngine.Analytics.dll (this message is harmless)
+Loading C:\Users\David\Documents\GitHubVisualStudio\Emissary\Emissary\Build\Development\0.0.3\Emissary_0.0.3_Data\Managed\UnityEngine.Analytics.dll into Unity Child Domain
+- Completed reload, in  0.037 seconds
+desktop: 1920x1080 60Hz; virtual: 3360x1080 at 0,0
+<RI> Initializing input.
+<RI> Input initialized.
+<RI> Initialized touch support.
+Platform assembly: C:\Users\David\Documents\GitHubVisualStudio\Emissary\Emissary\Build\Development\0.0.3\Emissary_0.0.3_Data\Managed\System.Core.dll (this message is harmless)
+Platform assembly: C:\Users\David\Documents\GitHubVisualStudio\Emissary\Emissary\Build\Development\0.0.3\Emissary_0.0.3_Data\Managed\System.dll (this message is harmless)
