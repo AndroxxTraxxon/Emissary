@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public class Grid : MonoBehaviour {
 
     public bool displayGridGizmos;
-    public Transform player;
+    //public Transform player;
     public LayerMask unwalkableMask;
     public Vector2 gridWorldSize;
     public float nodeRadius;
@@ -48,7 +48,7 @@ public class Grid : MonoBehaviour {
 
         if (grid != null && displayGridGizmos)
         {
-
+            /*
             Node playerNode = getNodeFromWorldPoint(player.position);
             foreach(Node n in grid)
             {
@@ -58,7 +58,7 @@ public class Grid : MonoBehaviour {
                 if (playerNode == n) Gizmos.color = Color.cyan;
                 Gizmos.DrawCube(n.worldPosition, Vector3.one * (nodeDiameter *.95f));
             }
-
+            */
         }
     }
 

@@ -6,16 +6,19 @@ public class Unit : MonoBehaviour
 {
 
     //public Transform target;
+    public enum VehicleType { AIR, WATER, GROUND, BUILDING};
+
     float speed = 5;
     Vector3[] path;
     int targetIndex;
     public bool selected;
-    public float maxHealth = 100f;
+    public const float maxHealth = 100f;
     public float health;
+    public VehicleType type = VehicleType.AIR;
 
     void Start()
     {
-        //PathRequestManager.RequestPath(transform.position, target.position, OnPathFound);
+        InputManager.instance.AddSelectableUnit(this);
     }
 
     void Update()
