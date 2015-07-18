@@ -6,6 +6,9 @@ using System;
 public class InputManager : MonoBehaviour {
 
     public int playerID = 0;
+    public static InputManager instance;
+    public Texture selectionTexture;
+
     private List<Unit> selectedUnits;
     private List<Unit> selectableUnits;
 
@@ -15,11 +18,9 @@ public class InputManager : MonoBehaviour {
     private Rect selectionBox = new Rect();
     private Vector3 initMousePosition;
 
-
     private float lastClickTime = 0;
-    private const float doubleClickTime = .25f;
-
-    public static InputManager instance;
+    private const float doubleClickTime = 0.25f;
+    private float selectionTransparency = 0.35f;
 
     void Awake()
     {
@@ -27,6 +28,8 @@ public class InputManager : MonoBehaviour {
         selectedUnits = new List<Unit>();
         selectableUnits = new List<Unit>();
     }
+
+
     void Update(){
 
         #region Mouse Clicked
@@ -61,7 +64,10 @@ public class InputManager : MonoBehaviour {
             }
             else
             {
-                AddUnitToSelection(hit.collider.gameObject.GetComponent<Unit>());
+                if (hit.collider.gameObject.GetComponent<Unit>()!= null)
+                {
+                    AddUnitToSelection(hit.collider.gameObject.GetComponent<Unit>()); 
+                }
                 lastClickTime = Time.time;
             }
 
@@ -251,9 +257,14 @@ public class InputManager : MonoBehaviour {
     {
         if (boxSelection)
         {
-            GUI.Box(selectionBox, "");
+            GUI.color = Color.gray;
+            GUI.color = new Color(GUI.color.r, GUI.color.g, GUI.color.b, selectionTransparency);
+            GUI.DrawTexture(selectionBox, selectionTexture);
+            GUI.color = Color.white;
         }
     }
+
+    
 
 
 }
