@@ -81,7 +81,7 @@ public class InputManager : MonoBehaviour {
         {
             foreach (Unit go in selectedUnits)
             {
-                go.RequestPathFromManager(hit.point);
+                go.EnqueuePathLocation(hit.point);
             }
         }
 
@@ -109,8 +109,6 @@ public class InputManager : MonoBehaviour {
         {
             if (boxSelection)
             {
-                if (hit.collider.gameObject.GetComponent<Unit>() != null)
-                    RemoveLastSelectedUnit();
                     //if the multiple selection box has been activated, do a box selection.
                     SelectMultipleObjects(Input.mousePosition, initMousePosition);
             }

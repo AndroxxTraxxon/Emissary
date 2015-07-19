@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System;
 
 public class Unit : MonoBehaviour
@@ -11,8 +12,10 @@ public class Unit : MonoBehaviour
 
     float speed = 5;
     Vector3[] path;
+    Queue<Vector3> pathQueue = new Queue<Vector3>();
+    bool moving = false;
     int targetIndex;
-    public bool selected;
+    private bool selected;
     public const float maxHealth = 100f;
     public float health;
     public VehicleType type = VehicleType.AIR;
@@ -27,11 +30,6 @@ public class Unit : MonoBehaviour
 
     }
 
-    public void RequestPathFromManager(Vector3 target)
-    {
-        PathRequestManager.RequestPath(transform.position, target, OnPathFound);
-    }
-
     public void OnPathFound(Vector3[] newPath, bool pathSuccessful)
     {
         if (pathSuccessful)
@@ -44,13 +42,19 @@ public class Unit : MonoBehaviour
 
     internal void Deselect()
     {
-        selected = false;
-        gameObject.GetComponentInChildren<SpriteRenderer>().enabled = false;
+        if (selected)
+        {
+            selected = false;
+            gameObject.GetComponentInChildren<SpriteRenderer>().enabled = false; 
+        }
     }
     internal void Select()
     {
-        selected = true;
-        gameObject.GetComponentInChildren<SpriteRenderer>().enabled = true;
+        if (!selected)
+        {
+            selected = true;
+            gameObject.GetComponentInChildren<SpriteRenderer>().enabled = true; 
+        }
     }
     IEnumerator FollowPath()
     {
@@ -64,6 +68,8 @@ public class Unit : MonoBehaviour
                 targetIndex++;
                 if (targetIndex >= path.Length)
                 {
+                    moving = false;
+                    TryProcessNextPath();
                     yield break;
                 }
                 currentWaypoint = path[targetIndex];
@@ -73,9 +79,22 @@ public class Unit : MonoBehaviour
             yield return null;
 
         }
+        
     }
 
+    private void TryProcessNextPath()
+    {
+        if(pathQueue.Count > 0 && !moving)
+        {
+            RequestPathFromManager(pathQueue.Dequeue());
+            moving = true;
+        }
+    }
 
+    public void RequestPathFromManager(Vector3 target)
+    {
+        PathRequestManager.RequestPath(transform.position, target, OnPathFound);
+    }
 
     public void OnDrawGizmos()
     {
@@ -96,6 +115,12 @@ public class Unit : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void EnqueuePathLocation(Vector3 target)
+    {
+        pathQueue.Enqueue(target);
+        TryProcessNextPath();
     }
 
 }
