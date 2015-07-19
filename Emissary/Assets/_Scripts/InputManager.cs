@@ -130,7 +130,6 @@ public class InputManager : MonoBehaviour {
             boxSelection = false;
         }
 
-
         #region Keyboard Input
         //Keyboard-Explicit controls begin here.
         //Shift-Key Combo Functions
@@ -268,8 +267,4 @@ public class InputManager : MonoBehaviour {
             GUI.color = Color.white;
         }
     }
-
-    
-
-
 }

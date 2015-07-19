@@ -21,7 +21,7 @@ public class Unit : MonoBehaviour
     public VehicleType type = VehicleType.AIR;
     private bool cancelCurrentPath = false;
     private bool requestingPath;
-    float CurrentRequestID;
+    uint CurrentRequestID;
     Vector3 CurrentTarget;
 
     void Start()
@@ -100,8 +100,16 @@ public class Unit : MonoBehaviour
     {
         if(requestingPath)
         {
-            cancelCurrentPath = true;
-            PathRequestManager.RemoveRequestFromQueue(transform.position, CurrentTarget, OnPathFound, CurrentRequestID);
+            cancelCurrentPath = false;
+            
+            if (PathRequestManager.instance.CurrentPathID == CurrentRequestID)
+            {
+                cancelCurrentPath = true;
+            }
+            else
+            {
+                PathRequestManager.RemoveRequestFromQueue(transform.position, CurrentTarget, OnPathFound, CurrentRequestID);
+            }
             requestingPath = false;
         }
         pathQueue.Clear();

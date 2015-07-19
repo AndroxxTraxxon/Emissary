@@ -8,25 +8,32 @@ public class PathRequestManager : MonoBehaviour {
     FilteredQueue<PathRequest> pathRequestQueue = new FilteredQueue<PathRequest>();
     PathRequest currentPathRequest;
 
-    static PathRequestManager instance;
+    public static PathRequestManager instance;
     Pathfinding pathfinding;
 
     bool isProcessingPath;
 
+
+    public float CurrentPathID
+    {
+        get{
+            return currentPathRequest.RequestID;
+        }
+    }
     void Awake()
     {
         instance = this;
         pathfinding = GetComponent<Pathfinding>();
     }
 
-    public static void RequestPath(Vector3 pathStart, Vector3 pathEnd, Action<Vector3[], bool> callback, out float ID)
+    public static void RequestPath(Vector3 pathStart, Vector3 pathEnd, Action<Vector3[], bool> callback, out uint ID)
     {
         PathRequest newRequest = new PathRequest(pathStart, pathEnd, callback, out ID);
         instance.pathRequestQueue.Enqueue(newRequest);
         instance.TryProcessNext();
     }
     
-    public static void RemoveRequestFromQueue(Vector3 pathStart, Vector3 pathEnd, Action<Vector3[], bool> callback, float ID)
+    public static void RemoveRequestFromQueue(Vector3 pathStart, Vector3 pathEnd, Action<Vector3[], bool> callback, uint ID)
     {
         instance.pathRequestQueue.Remove(new PathRequest(pathStart, pathEnd, callback, ID));
     }
@@ -37,6 +44,7 @@ public class PathRequestManager : MonoBehaviour {
             currentPathRequest = pathRequestQueue.Dequeue();
             isProcessingPath = true;
             pathfinding.StartFindPath(currentPathRequest.pathStart, currentPathRequest.pathEnd);
+            Debug.Log("Current Path ID: " + CurrentPathID);
         }
     }
 
@@ -52,9 +60,10 @@ public class PathRequestManager : MonoBehaviour {
         public Vector3 pathStart;
         public Vector3 pathEnd;
         public Action<Vector3[], bool> callback;
-        float RequestID;
+        public uint RequestID;
+        static uint currentID = 0;
 
-        public PathRequest(Vector3 _start, Vector3 _end, Action<Vector3[], bool> _callback, float ID)
+        public PathRequest(Vector3 _start, Vector3 _end, Action<Vector3[], bool> _callback, uint ID)
         {
             pathStart = _start;
             pathEnd = _end;
@@ -62,12 +71,12 @@ public class PathRequestManager : MonoBehaviour {
             RequestID = ID;
         }
 
-        public PathRequest(Vector3 _start, Vector3 _end, Action<Vector3[], bool> _callback, out float ID)
+        public PathRequest(Vector3 _start, Vector3 _end, Action<Vector3[], bool> _callback, out uint ID)
         {
             pathStart = _start;
             pathEnd = _end;
             callback = _callback;
-            RequestID = Time.time;
+            RequestID = currentID++;
             ID = RequestID;
         }
         public override string ToString()
