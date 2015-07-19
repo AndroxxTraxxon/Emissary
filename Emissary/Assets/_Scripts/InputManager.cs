@@ -79,6 +79,13 @@ public class InputManager : MonoBehaviour {
         }
         else if (Input.GetMouseButtonDown(1))
         {
+            if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
+            {
+                foreach (Unit go in selectedUnits)
+                {
+                    go.InterruptPath();
+                }
+            }
             foreach (Unit go in selectedUnits)
             {
                 go.EnqueuePathLocation(hit.point);

@@ -19,6 +19,7 @@ public class Unit : MonoBehaviour
     public const float maxHealth = 100f;
     public float health;
     public VehicleType type = VehicleType.AIR;
+    private bool cancelCurrentPath = false;
 
     void Start()
     {
@@ -32,11 +33,12 @@ public class Unit : MonoBehaviour
 
     public void OnPathFound(Vector3[] newPath, bool pathSuccessful)
     {
-        if (pathSuccessful)
+        if (pathSuccessful && !cancelCurrentPath)
         {
             path = newPath;
             StopCoroutine("FollowPath");
             StartCoroutine("FollowPath");
+            cancelCurrentPath = false;
         }
     }
 
@@ -91,6 +93,17 @@ public class Unit : MonoBehaviour
         }
     }
 
+    public void InterruptPath()
+    {
+        if(pathQueue.Count > 0)
+        {
+            cancelCurrentPath = true;
+            pathQueue.Clear();
+        }
+        StopCoroutine("FollowPath");
+        moving = false;
+    }
+
     public void RequestPathFromManager(Vector3 target)
     {
         PathRequestManager.RequestPath(transform.position, target, OnPathFound);
@@ -121,6 +134,7 @@ public class Unit : MonoBehaviour
     {
         pathQueue.Enqueue(target);
         TryProcessNextPath();
+
     }
 
 }
