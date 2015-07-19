@@ -20,6 +20,9 @@ public class Unit : MonoBehaviour
     public float health;
     public VehicleType type = VehicleType.AIR;
     private bool cancelCurrentPath = false;
+    private bool requestingPath;
+    float CurrentRequestID;
+    Vector3 CurrentTarget;
 
     void Start()
     {
@@ -33,13 +36,15 @@ public class Unit : MonoBehaviour
 
     public void OnPathFound(Vector3[] newPath, bool pathSuccessful)
     {
+        requestingPath = false;
         if (pathSuccessful && !cancelCurrentPath)
         {
+            moving = true;
             path = newPath;
             StopCoroutine("FollowPath");
             StartCoroutine("FollowPath");
-            cancelCurrentPath = false;
         }
+        cancelCurrentPath = false;
     }
 
     internal void Deselect()
@@ -81,7 +86,6 @@ public class Unit : MonoBehaviour
             yield return null;
 
         }
-        
     }
 
     private void TryProcessNextPath()
@@ -89,24 +93,27 @@ public class Unit : MonoBehaviour
         if(pathQueue.Count > 0 && !moving)
         {
             RequestPathFromManager(pathQueue.Dequeue());
-            moving = true;
         }
     }
 
     public void InterruptPath()
     {
-        if(pathQueue.Count > 0)
+        if(requestingPath)
         {
             cancelCurrentPath = true;
-            pathQueue.Clear();
+            PathRequestManager.RemoveRequestFromQueue(transform.position, CurrentTarget, OnPathFound, CurrentRequestID);
+            requestingPath = false;
         }
+        pathQueue.Clear();
         StopCoroutine("FollowPath");
         moving = false;
     }
 
     public void RequestPathFromManager(Vector3 target)
     {
-        PathRequestManager.RequestPath(transform.position, target, OnPathFound);
+        CurrentTarget = target;
+        requestingPath = true;
+        PathRequestManager.RequestPath(transform.position, target, OnPathFound, out CurrentRequestID);
     }
 
     public void OnDrawGizmos()
