@@ -38,9 +38,23 @@ public class InputManager : MonoBehaviour {
         //This also means that I can reference it wherever I want at any time.
 
         //LeftMouseButtonInput
+
+        if (Input.GetMouseButton(0) && mouseDownLastFrame)
+        {
+            if ((Input.mousePosition - initMousePosition).magnitude > 25)
+            {
+                showSelectionBox(Input.mousePosition, initMousePosition);
+                boxSelection = true;
+            }
+            else
+            {
+                boxSelection = false;
+            }
+        }
+
         if (Input.GetMouseButtonDown(0))
         {
-            
+            initMousePosition = Input.mousePosition;
             //If the shift button isn't pressed, then not multiple select.
             if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
             {
@@ -73,7 +87,6 @@ public class InputManager : MonoBehaviour {
 
         //end left mouse button input
             mouseDownLastFrame = true;
-            initMousePosition = Input.mousePosition;
         //Right Mouse Button Input
 
         }
@@ -93,17 +106,7 @@ public class InputManager : MonoBehaviour {
         }
 
         //Basically, if you're holding the left mouse down, and you're dragging the mouse, begin a box selection
-        if (Input.GetMouseButton(0) && mouseDownLastFrame)
-        {
-            if ((Input.mousePosition - initMousePosition).magnitude > 25)
-            {
-                showSelectionBox(Input.mousePosition, initMousePosition);
-                boxSelection = true;
-            }else
-            {
-                boxSelection = false;
-            }
-        } 
+        
         #endregion
 
         #region Mouse Released

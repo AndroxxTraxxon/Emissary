@@ -28,9 +28,13 @@ public class Pathfinding : MonoBehaviour {
         Node startNode = grid.getNodeFromWorldPoint(startPos);
         Node targetNode = grid.getNodeFromWorldPoint(targetPos);
 
-        if (startNode.walkable && targetNode.walkable)
+        if (startPos.Equals(targetPos))
         {
-
+            
+        }
+        else if (startNode.walkable && targetNode.walkable)
+        {
+            
             Heap<Node> openSet = new Heap<Node>(grid.MaxSize);
             HashSet<Node> closedSet = new HashSet<Node>();
             openSet.Add(startNode);
@@ -80,6 +84,10 @@ public class Pathfinding : MonoBehaviour {
         {
             waypoints = RetracePath(startNode, targetNode);
         }
+        if (waypoints.Length <= 0)
+        {
+            pathSuccess = false;
+        }
         requestManager.FinishedProcessingPath(waypoints, pathSuccess);
         
     }
@@ -93,6 +101,10 @@ public class Pathfinding : MonoBehaviour {
         {
             path.Add(currentNode);
             currentNode = currentNode.parent;
+        }
+        if (path.Count <= 0)
+        {
+            return new Vector3[0];
         }
         Vector3[] waypoints = SimplifyPath(path);
         Array.Reverse(waypoints);
@@ -114,6 +126,10 @@ public class Pathfinding : MonoBehaviour {
             for(int i = 1; i < path.Count; i++){
                 Vector2 directionNew = new Vector2(path[i-1].gridX-path[i].gridX, path[i-1].gridY-path[i].gridY);
                 if(directionNew!= directionOld){
+                if (!waypoints.Contains(path[i - 1].worldPosition))
+                {
+                    waypoints.Add(path[i-1].worldPosition);
+                }
                     waypoints.Add(path[i].worldPosition);
                     directionOld = directionNew;
                 }

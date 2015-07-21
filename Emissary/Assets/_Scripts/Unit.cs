@@ -7,20 +7,20 @@ public class Unit : MonoBehaviour
 {
 
     //public Transform target;
-    public enum VehicleType { AIR, WATER, GROUND, BUILDING, Constructor};
+    public enum VehicleType { AIR, WATER, GROUND, BUILDING, ENGY};
+    public enum UnitState { Stopped, RequestingPath, Moving, Building, Attacking}
     public string UnitID;
 
     float speed = 5;
     Vector3[] path;
     Queue<Vector3> pathQueue = new Queue<Vector3>();
-    bool moving = false;
+    public UnitState currentState = UnitState.Stopped;
     int targetIndex;
     private bool selected;
     public const float maxHealth = 100f;
     public float health;
     public VehicleType type = VehicleType.AIR;
     private bool cancelCurrentPath = false;
-    private bool requestingPath;
     uint CurrentRequestID;
     Vector3 CurrentTarget;
 
@@ -36,13 +36,15 @@ public class Unit : MonoBehaviour
 
     public void OnPathFound(Vector3[] newPath, bool pathSuccessful)
     {
-        requestingPath = false;
         if (pathSuccessful && !cancelCurrentPath)
         {
-            moving = true;
             path = newPath;
             StopCoroutine("FollowPath");
             StartCoroutine("FollowPath");
+        }
+        else
+        {
+            currentState = UnitState.Stopped;
         }
         cancelCurrentPath = false;
     }
@@ -75,7 +77,7 @@ public class Unit : MonoBehaviour
                 targetIndex++;
                 if (targetIndex >= path.Length)
                 {
-                    moving = false;
+                    currentState = UnitState.Stopped;
                     TryProcessNextPath();
                     yield break;
                 }
@@ -90,7 +92,7 @@ public class Unit : MonoBehaviour
 
     private void TryProcessNextPath()
     {
-        if(pathQueue.Count > 0 && !moving)
+        if(pathQueue.Count > 0 && (currentState != UnitState.Moving))
         {
             RequestPathFromManager(pathQueue.Dequeue());
         }
@@ -98,10 +100,8 @@ public class Unit : MonoBehaviour
 
     public void InterruptPath()
     {
-        if(requestingPath)
+        if(currentState == UnitState.RequestingPath)
         {
-            cancelCurrentPath = false;
-            
             if (PathRequestManager.instance.CurrentPathID == CurrentRequestID)
             {
                 cancelCurrentPath = true;
@@ -109,18 +109,18 @@ public class Unit : MonoBehaviour
             else
             {
                 PathRequestManager.RemoveRequestFromQueue(transform.position, CurrentTarget, OnPathFound, CurrentRequestID);
+                cancelCurrentPath = false;
             }
-            requestingPath = false;
         }
         pathQueue.Clear();
         StopCoroutine("FollowPath");
-        moving = false;
+        currentState = UnitState.Stopped;
     }
 
     public void RequestPathFromManager(Vector3 target)
     {
         CurrentTarget = target;
-        requestingPath = true;
+        currentState = UnitState.RequestingPath;
         PathRequestManager.RequestPath(transform.position, target, OnPathFound, out CurrentRequestID);
     }
 
