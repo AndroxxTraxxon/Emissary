@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace Emissary
 {
-    public class Pathfinding : MonoBehaviour
+    public class AStar : MonoBehaviour
     {
 
         PathRequestManager requestManager;

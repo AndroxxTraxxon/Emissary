@@ -5,13 +5,13 @@ using System.Collections.Generic;
 
 namespace Emissary
 {
-    public class PathRequestManager : MonoBehaviour
+    public class TestPathRequestManager : MonoBehaviour
     {
 
         FilteredQueue<PathRequest> pathRequestQueue = new FilteredQueue<PathRequest>();
         PathRequest currentPathRequest;
 
-        public static PathRequestManager instance;
+        public static TestPathRequestManager instance;
         AStar pathfinding;
 
         bool isProcessingPath;
@@ -88,5 +88,5 @@ namespace Emissary
                 return " " + pathStart.ToString() + " " + pathEnd.ToString();
             }
         }
-    } 
+    }
 }

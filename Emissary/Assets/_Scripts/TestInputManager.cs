@@ -5,13 +5,14 @@ using System;
 
 namespace Emissary
 {
-    public class InputManager : MonoBehaviour
+    public class TestInputManager : MonoBehaviour
     {
 
         public int playerID = 0;
-        public static InputManager instance;
+        public static TestInputManager instance;
         public Texture selectionTexture;
-        Grid grid;
+        VectorGrid grid;
+        public VectorField field;
 
         private List<Unit> selectedUnits;
         private List<Unit> selectableUnits;
@@ -52,8 +53,7 @@ namespace Emissary
             {
                 if ((Input.mousePosition - initMousePosition).magnitude > 25)
                 {
-                    showSelectionBox(Input.mousePosition, initMousePosition);
-                    boxSelection = true;
+                    OnMouseDrag();
                 }
                 else
                 {
@@ -62,60 +62,10 @@ namespace Emissary
             }
 
             if (Input.GetMouseButtonDown(0))
-            {
-                initMousePosition = Input.mousePosition;
-                //If the shift button isn't pressed, then not multiple select.
-                if (!shiftPressed)
-                {
-                    ClearUnitList();
-                }
-
-                if (Time.time - lastClickTime < doubleClickTime)
-                {
-                    //do double click things
-                    if (hit.collider.gameObject.GetComponent<Unit>() != null)
-                    {
-                        Unit currentUnit = hit.collider.gameObject.GetComponent<Unit>();
-                        foreach (Unit unit in selectableUnits)
-                        {
-                            if (unit.GetComponent<Renderer>().isVisible && unit.UnitID.Equals(currentUnit.UnitID))
-                            {
-                                AddUnitToSelection(unit);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    //if (hit.collider.gameObject.GetComponent<Unit>() != null)
-                    {
-                        AddUnitToSelection(hit.collider.gameObject.GetComponent<Unit>());
-                    }
-                    lastClickTime = Time.time;
-                }
-
-                //end left mouse button input
-                mouseDownLastFrame = true;
-                //Right Mouse Button Input
-
-            }
+                OnLeftMouseClicked();
             else if (Input.GetMouseButtonDown(1))
             {
-                if (PathRequestManager.instance.gameObject.GetComponent<Grid>().getNodeFromWorldPoint(hit.point).walkable)
-                {
-                    if (!shiftPressed)
-                    {
-                        foreach (Unit go in selectedUnits)
-                        {
-                            
-                            go.InterruptPath();
-                        }
-                    }
-                    foreach (Unit go in selectedUnits)
-                    {
-                        go.EnqueuePathLocation(hit.point);
-                    }
-                }
+                OnRightMouseClicked();
             }
 
             //Basically, if you're holding the left mouse down, and you're dragging the mouse, begin a box selection
@@ -130,12 +80,7 @@ namespace Emissary
 
             if (Input.GetMouseButtonUp(0))
             {
-                if (boxSelection)
-                {
-                    //if the multiple selection box has been activated, do a box selection.
-                    SelectMultipleObjects(Input.mousePosition, initMousePosition);
-                }
-                boxSelection = false;
+                OnLeftMouseReleased();
             }
 
             #endregion
@@ -148,11 +93,6 @@ namespace Emissary
 
             #region Keyboard Input
             //Keyboard-Explicit controls begin here.
-            //Shift-Key Combo Functions
-            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
-            {
-
-            }
             //Control-Key combo Functions
             if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
             {
@@ -213,6 +153,90 @@ namespace Emissary
                 ClearUnitList();
             }
             #endregion
+        }
+
+        private void OnLeftMouseClicked()
+        {
+
+
+
+            initMousePosition = Input.mousePosition;
+            //If the shift button isn't pressed, then not multiple select.
+            /*if (!shiftPressed)
+            {
+                ClearUnitList();
+            }
+            */
+            if (Time.time - lastClickTime < doubleClickTime)
+            {
+                //do double click things
+                OnDoubleClick();
+            }
+            else
+            {
+                /*if (hit.collider.gameObject.GetComponent<Unit>() != null)
+                {
+                    AddUnitToSelection(hit.collider.gameObject.GetComponent<Unit>());
+                }*/
+                lastClickTime = Time.time;
+            }
+
+            //end left mouse button input
+            mouseDownLastFrame = true;
+            //Right Mouse Button Input
+        }
+
+        private void OnLeftMouseReleased()
+        {
+            if (boxSelection)
+            {
+                //if the multiple selection box has been activated, do a box selection.
+                SelectMultipleObjects(Input.mousePosition, initMousePosition);
+            }
+            boxSelection = false;
+        }
+
+        private void OnRightMouseClicked()
+        {
+            /*if (PathRequestManager.instance.gameObject.GetComponent<Grid>().getNodeFromWorldPoint(hit.point).walkable)
+            {
+                if (!shiftPressed)
+                {
+                    foreach (Unit go in selectedUnits)
+                    {
+
+                        go.InterruptPath();
+                    }
+                }
+                foreach (Unit go in selectedUnits)
+                {
+                    go.EnqueuePathLocation(hit.point);
+                }
+            }*/
+            field.OrientGrid(hit.point);
+
+        }
+
+        private void OnMouseDrag()
+        {
+            showSelectionBox(Input.mousePosition, initMousePosition);
+            boxSelection = true;
+        }
+
+        private void OnDoubleClick()
+        {
+            if (hit.collider.gameObject.GetComponent<Unit>() != null)
+            {
+                
+                Unit currentUnit = hit.collider.gameObject.GetComponent<Unit>();
+                foreach (Unit unit in selectableUnits)
+                {
+                    if (unit.GetComponent<Renderer>().isVisible && unit.UnitID.Equals(currentUnit.UnitID))
+                    {
+                        AddUnitToSelection(unit);
+                    }
+                }
+            }
         }
 
         private void showSelectionBox(Vector3 currentPos, Vector3 originalPos)
@@ -286,5 +310,5 @@ namespace Emissary
             }
         }
     }
-    
+
 }
