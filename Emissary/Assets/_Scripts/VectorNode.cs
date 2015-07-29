@@ -9,24 +9,23 @@ namespace Emissary
 
         public bool walkable;
         public Vector3 worldPosition;
-        public int gridX;
-        public int gridY;
+        public Vector2 regionCoords;
         public VectorNode parent;
         public int movementPenalty;
         public Vector3 flowDirection;
-
+        public GridRegion region;
 
         public int gCost;
         public int hCost;
         int heapIndex;
 
-        public VectorNode(bool _walkable, Vector3 _worldPos, int _gridX, int _gridY, int _movementPenalty)
+        public VectorNode(bool _walkable, Vector3 _worldPos, int _regionX, int _regionY, int _movementPenalty, GridRegion region)
         {
             walkable = _walkable;
             worldPosition = _worldPos;
-            gridX = _gridX;
-            gridY = _gridY;
+            regionCoords = new Vector2(_regionX, _regionY);
             movementPenalty = _movementPenalty;
+            this.region = region;
         }
 
         public int HeapIndex
@@ -44,7 +43,7 @@ namespace Emissary
 
         public override string ToString()
         {
-            return "NODE{WK: " + walkable + ", WP: " + worldPosition + ", X: " + gridX + "Y: " + gridY + "}";
+            return "NODE{WK: " + walkable + ", WP: " + worldPosition + ", GP: "+GridPosition+"}";
         }
 
         public int CompareTo(VectorNode other)
@@ -57,6 +56,15 @@ namespace Emissary
 
             return -compare;
         }
+
+        public Vector2 GridPosition
+        {
+            get
+            {
+                return region.GridCoords * 16 + regionCoords;
+            }
+        }
+
     }
 
 }

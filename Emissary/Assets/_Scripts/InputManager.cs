@@ -76,11 +76,12 @@ namespace Emissary
                     if (hit.collider.gameObject.GetComponent<Unit>() != null)
                     {
                         Unit currentUnit = hit.collider.gameObject.GetComponent<Unit>();
-                        foreach (Unit unit in selectableUnits)
+                        foreach (Unit Unit in selectableUnits)
                         {
-                            if (unit.GetComponent<Renderer>().isVisible && unit.UnitID.Equals(currentUnit.UnitID))
+                            //unit ID used to differentiate between different kinds of units, not each individual unit.
+                            if (Unit.GetComponent<Renderer>().isVisible && Unit.UnitID.Equals(currentUnit.UnitID))
                             {
-                                AddUnitToSelection(unit);
+                                AddUnitToSelection(Unit);
                             }
                         }
                     }
@@ -124,7 +125,7 @@ namespace Emissary
 
             #region Mouse Released
             /*
-         * This contains code for when the mouse is released. Actions like unit selection, click-and-drag selection, etc.
+         * This contains code for when the mouse is released. Actions like Unit selection, click-and-drag selection, etc.
          * 
          * */
 
@@ -231,7 +232,7 @@ namespace Emissary
 
         private void SelectMultipleObjects(Vector3 currentPos, Vector3 originalPos)
         {
-            foreach (Unit go in selectableUnits) //represents all the movable units
+            foreach (Unit go in selectableUnits) //represents all the movable Units
             {
                 Vector3 screenCoordinates = Camera.main.WorldToScreenPoint(go.transform.position);//convert the current object position to screen coordinates
                 screenCoordinates.y = Screen.height - screenCoordinates.y;
@@ -247,12 +248,12 @@ namespace Emissary
             }
         }
 
-        private void AddUnitToSelection(Unit unit)
+        private void AddUnitToSelection(Unit Unit)
         {
-            if (selectableUnits.Contains(unit) && !selectedUnits.Contains(unit))
+            if (selectableUnits.Contains(Unit) && !selectedUnits.Contains(Unit))
             {
-                selectedUnits.Add(unit);
-                unit.GetComponent<Unit>().Select();
+                selectedUnits.Add(Unit);
+                Unit.GetComponent<Unit>().Select();
             }
         }
         private void RemoveLastSelectedUnit()
@@ -267,11 +268,11 @@ namespace Emissary
             }
             selectedUnits.Clear();
         }
-        public void AddSelectableUnit(Unit unit)
+        public void AddSelectableUnit(Unit Unit)
         {
-            if (unit.GetComponent<Unit>() != null)
+            if (Unit.GetComponent<Unit>() != null)
             {
-                selectableUnits.Add(unit);
+                selectableUnits.Add(Unit);
             }
         }
 
@@ -284,6 +285,17 @@ namespace Emissary
                 GUI.DrawTexture(selectionBox, selectionTexture);
                 GUI.color = Color.white;
             }
+        }
+    }
+
+    public abstract class Selectable : MonoBehaviour
+    {
+        bool selected;
+        internal virtual void Select(){
+            selected = true;
+        }
+        internal virtual void Deselect(){
+            selected = false;
         }
     }
     

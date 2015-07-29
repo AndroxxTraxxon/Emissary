@@ -5,7 +5,7 @@ using System;
 
 namespace Emissary
 {
-    public class Unit : MonoBehaviour
+    public class Unit : Selectable
     {
 
         //public Transform target;
@@ -26,7 +26,7 @@ namespace Emissary
         public VehicleType type = VehicleType.GROUND;
         protected bool cancelCurrentPath = false;
         protected uint CurrentRequestID;
-        protected Vector3 CurrentTarget;
+        protected VectorGrid currentGrid;
 
         void Start()
         {
@@ -35,25 +35,15 @@ namespace Emissary
 
         void Update()
         {
-            
+
         }
 
-        public void OnPathFound(Vector3[] newPath, bool pathSuccessful)
+        internal void OnPathFound(Vector3[] newPath, bool pathSuccessful)
         {
-            if (pathSuccessful && !cancelCurrentPath)
-            {
-                path = newPath;
-                StopCoroutine("FollowPath");
-                StartCoroutine("FollowPath");
-            }
-            else
-            {
-                currentState = UnitState.Stopped;
-            }
-            cancelCurrentPath = false;
+
         }
 
-        internal void Deselect()
+        internal override void Deselect()
         {
             if (selected)
             {
@@ -61,7 +51,7 @@ namespace Emissary
                 gameObject.GetComponentInChildren<SpriteRenderer>().enabled = false;
             }
         }
-        internal void Select()
+        internal override void Select()
         {
             if (!selected)
             {
@@ -69,71 +59,25 @@ namespace Emissary
                 gameObject.GetComponentInChildren<SpriteRenderer>().enabled = true;
             }
         }
+
         IEnumerator FollowPath()
         {
-            currentState = UnitState.Moving;
-            Vector3 currentWaypoint = path[0];
-            targetIndex = 0;
-
-            while (true)
-            {
-                if (transform.position == currentWaypoint)
-                {
-                    targetIndex++;
-                    if (targetIndex >= path.Length)
-                    {
-                        currentState = UnitState.Stopped;
-                        TryProcessNextPath();
-                        yield break;
-                    }
-                    currentWaypoint = path[targetIndex];
-                }
-
-                transform.position = Vector3.MoveTowards(transform.position, currentWaypoint, speed * Time.deltaTime);
-                yield return null;
-
-            }
+            yield return null;
         }
 
         public void TryProcessNextPath()
         {
-            if (pathQueue.Count > 0 && (currentState == UnitState.Stopped) && this.type != VehicleType.BUILDING)
-            {
-                RequestPathFromManager(pathQueue.Dequeue());
-            }
+
         }
 
         public void InterruptPath()
         {
-            if (this.type != VehicleType.BUILDING)
-            {
-                if (currentState == UnitState.RequestingPath)
-                {
-                    if (PathRequestManager.instance.CurrentPathID == CurrentRequestID)
-                    {
-                        cancelCurrentPath = true;
-                    }
-                    else
-                    {
-                        PathRequestManager.RemoveRequestFromQueue(transform.position, CurrentTarget, OnPathFound, CurrentRequestID);
-                        cancelCurrentPath = false;
-                    }
-                }
-                pathQueue.Clear();
-                StopCoroutine("FollowPath");
-                currentState = UnitState.Stopped;
-            }
-            else
-            {
-                pathQueue.Clear();
-            }
+            
         }
 
         public void RequestPathFromManager(Vector3 target)
         {
-            CurrentTarget = target;
-            currentState = UnitState.RequestingPath;
-            PathRequestManager.RequestPath(transform.position, target, OnPathFound, out CurrentRequestID);
+
         }
 
         public void OnDrawGizmos()
@@ -159,17 +103,15 @@ namespace Emissary
 
         public void EnqueuePathLocation(Vector3 target)
         {
-            pathQueue.Enqueue(target);
-            TryProcessNextPath();
 
         }
 
         public void FactoryAddPathLocation(Vector3 target)
         {
-            pathQueue.Enqueue(target);
+            
         }
 
-        
+
     }
-    
+
 }

@@ -53,14 +53,18 @@ namespace Emissary
 {
     public class VectorField : MonoBehaviour 
     {
-
-        public VectorGrid grid;
-        double rootTwo = 1.5; // Math.Sqrt(2);
-
+        double rootTwo = 2.5;
+        public VectorGrid demoGrid;
+        public Vector2 worldSize;
+        public float nodeRadius;
+        public LayerMask unwalkableMask;
+        public TerrainType[] walkableRegions;
+        public Dictionary<int, int> walkableRegionsDictionary = new Dictionary<int, int>();
 
         // Use this for initialization
 	    void Start () {
-            OrientGrid(new Vector3(0, 0, 0));
+            demoGrid = new VectorGrid(transform.position, worldSize, nodeRadius, walkableRegions, walkableRegionsDictionary, unwalkableMask);
+            OrientGrid(new Vector3(0, 0, 0), demoGrid);
 	    }
 	
 	    // Update is called once per frame
@@ -68,7 +72,7 @@ namespace Emissary
 	        
 	    }
 
-        public void OrientGrid(Vector3 location)
+        public void OrientGrid(Vector3 location, VectorGrid grid)
         {
             int floorX = Mathf.FloorToInt(location.x)+1;
             int ceilX = Mathf.CeilToInt(location.x)+1;
@@ -76,63 +80,68 @@ namespace Emissary
             int ceilZ = Mathf.CeilToInt(location.z)+1;
             if (floorX == ceilX)
             {
-                ceilX++;
+                //ceilX++;
             }
             if (floorZ == ceilZ)
             {
-                ceilZ++;
+                //ceilZ++;
             }
 
             Queue<VectorNode> openSet = new Queue<VectorNode>();
             HashSet<VectorNode> closedSet = new HashSet<VectorNode>();
-            VectorNode targetNode = grid.getVectorNodeFromWorldPoint(new Vector3(floorX, location.y, floorZ));
+            VectorNode targetNode = grid.GetVectorNodeFromWorldPoint(new Vector3(floorX, location.y, floorZ));
+            //Debug.Log(targetNode);
             targetNode.gCost = 0;
             openSet.Enqueue(targetNode);
-            targetNode = grid.getVectorNodeFromWorldPoint(new Vector3(floorX, location.y, ceilZ));
+            targetNode = grid.GetVectorNodeFromWorldPoint(new Vector3(floorX, location.y, ceilZ));
             if(openSet.Contains(targetNode))
                 openSet.Enqueue(targetNode);
-            targetNode = grid.getVectorNodeFromWorldPoint(new Vector3(ceilX, location.y, floorZ));
+            targetNode = grid.GetVectorNodeFromWorldPoint(new Vector3(ceilX, location.y, floorZ));
             if (openSet.Contains(targetNode))
                 openSet.Enqueue(targetNode);
-            targetNode = grid.getVectorNodeFromWorldPoint(new Vector3(ceilX, location.y, ceilZ));
+            targetNode = grid.GetVectorNodeFromWorldPoint(new Vector3(ceilX, location.y, ceilZ));
             if (openSet.Contains(targetNode))
                 openSet.Enqueue(targetNode);
             while (openSet.Count > 0)
             {
                 VectorNode currentNode = openSet.Dequeue();
                 closedSet.Add(currentNode);
-                foreach (VectorNode node in grid.getNeighborVectorNodes(currentNode))
+                foreach (VectorNode node in grid.GetNeighborVectorNodes(currentNode))
                 {
+                    Debug.Log(node);
                     if (node.walkable)
 	                    {
 		                    int cost = currentNode.gCost + GetDist(currentNode, node);
                             if(!closedSet.Contains(node) || node.gCost > cost){
                                 node.parent = currentNode;
-                                node.gCost = cost;
-                                if(!openSet.Contains(node)){
+                                node.gCost = cost + node.movementPenalty;
+                                Debug.Log(node.gCost);
+                                if(!openSet.Contains(node) && !closedSet.Contains(node)){
                                     openSet.Enqueue(node);
                                 }
                             } 
 	                    }
                 }
             }
+
+            //TODO: Region-based processing
             for(int x = 0; x < grid.gridSizeX; x++){
                 for(int y = 0; y < grid.gridSizeY; y++){
-                    if(closedSet.Contains(grid.grid[x,y])){
+                    if(closedSet.Contains(grid.GetVectorNodeFromGrid(x,y))){
                         int up, down, left, right;
                         int upY, downY, leftX, rightX;
-                        leftX = (x >= 1 && grid.grid[x-1, y].walkable)? x-1: x;
-                        rightX = (x < grid.gridSizeX-1 && grid.grid[x+1, y].walkable)? x+1: x;
-                        upY = (y >= 1 && grid.grid[x, y-1].walkable)? y-1: y;
-                        downY = (y < grid.gridSizeY-1 && grid.grid[x, y+1].walkable)? y+1: y;
+                        leftX = (x >= 1 && grid.GetVectorNodeFromGrid(x-1, y).walkable)? x-1: x;
+                        rightX = (x < grid.gridSizeX-1 && grid.GetVectorNodeFromGrid(x+1, y).walkable)? x+1: x;
+                        upY = (y >= 1 && grid.GetVectorNodeFromGrid(x, y-1).walkable)? y-1: y;
+                        downY = (y < grid.gridSizeY-1 && grid.GetVectorNodeFromGrid(x, y+1).walkable)? y+1: y;
 
-                        up = grid.grid[x, upY].gCost;
-                        down = grid.grid[x, downY].gCost;
-                        left = grid.grid[leftX, y].gCost;
-                        right = grid.grid[rightX, y].gCost;
+                        up = grid.GetVectorNodeFromGrid(x, upY).gCost;
+                        down = grid.GetVectorNodeFromGrid(x, downY).gCost;
+                        left = grid.GetVectorNodeFromGrid(leftX, y).gCost;
+                        right = grid.GetVectorNodeFromGrid(rightX, y).gCost;
                         float factor = 1f/Mathf.Sqrt(4 * (Mathf.Pow(left - right, 2) + Mathf.Pow(down - up, 2)));
                         Vector3 direction = new Vector3(left-right, 0f, up-down) * factor;
-                        grid.grid[x,y].flowDirection = direction;
+                        grid.GetVectorNodeFromGrid(x, y).flowDirection = direction;
                         
                     }
                 }
@@ -143,13 +152,23 @@ namespace Emissary
         public int GetDist(VectorNode nodeA, VectorNode nodeB)
         //Returns the general distance between two nodes.
         {
-            int distX = Mathf.Abs(nodeA.gridX - nodeB.gridX);
-            int distY = Mathf.Abs(nodeA.gridY - nodeB.gridY);
+            int distX = (int)Mathf.Abs(nodeA.GridPosition.x - nodeB.GridPosition.x);
+            int distY = (int)Mathf.Abs(nodeA.GridPosition.y - nodeB.GridPosition.y);
             if (distX > distY)
             {
                 return (int)(10 * rootTwo * distY + 10 * (distX - distY));
             }
             return (int)(10 * rootTwo * distX + 10 * (distY - distX));
         }
+
+        void OnDrawGizmos()
+        {
+            if (demoGrid != null)
+            {
+                this.demoGrid.DrawGizmos();
+            }
+        }
+
+        
     } 
 }

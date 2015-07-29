@@ -213,7 +213,7 @@ namespace Emissary
                     go.EnqueuePathLocation(hit.point);
                 }
             }*/
-            field.OrientGrid(hit.point);
+            field.OrientGrid(hit.point, field.demoGrid);
 
         }
 
