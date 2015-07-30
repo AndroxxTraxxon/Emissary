@@ -13,9 +13,12 @@ namespace Emissary
 
         public static PathRequestManager instance;
         AStar pathfinding;
+		VectorField field;
+        //List<VectorGrid>
 
-        bool isProcessingPath;
+		public enum ProcessingState {ProcessingPath, ProcessingGrid, Stopped};
 
+		ProcessingState currentState = ProcessingState.Stopped;
 
         public float CurrentPathID
         {
@@ -43,19 +46,19 @@ namespace Emissary
         }
         void TryProcessNext()
         {
-            if (!isProcessingPath && pathRequestQueue.Count > 0)
+			if (currentState == ProcessingState.Stopped && pathRequestQueue.Count > 0)
             {
                 currentPathRequest = pathRequestQueue.Dequeue();
-                isProcessingPath = true;
+                currentState = ProcessingState.ProcessingPath;
                 pathfinding.StartFindPath(currentPathRequest.pathStart, currentPathRequest.pathEnd);
-                Debug.Log("Current Path ID: " + CurrentPathID);
+                //Debug.Log("Current Path ID: " + CurrentPathID);
             }
         }
 
         public void FinishedProcessingPath(Vector3[] path, bool success)
         {
             currentPathRequest.callback(path, success);
-            isProcessingPath = false;
+            currentState = ProcessingState.ProcessingGrid;
             TryProcessNext();
         }
 

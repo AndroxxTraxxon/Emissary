@@ -6,7 +6,7 @@ namespace Emissary
 {
     public class GridRegion
     {
-
+		public System.Random rand = new System.Random();
         public bool displayGridGizmos = true;
         // Use this for initialization
         public const int STANDARD_SIZE = 16;
@@ -96,6 +96,8 @@ namespace Emissary
 
         public void DrawGizmos()
         {
+			Gizmos.color = Color.white;//new Color(GridRegion.rand.Range(0f,1f),GridRegion.rand.Range(0f,1f),GridRegion.rand.Range(0f,1f));
+			Gizmos.DrawWireCube(offset, Vector3.right * width * nodeScale + Vector3.forward * height * nodeScale);
             if (nodes != null && displayGridGizmos)
             {
                 foreach (VectorNode n in nodes)

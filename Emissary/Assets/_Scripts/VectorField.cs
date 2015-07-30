@@ -108,14 +108,14 @@ namespace Emissary
                 closedSet.Add(currentNode);
                 foreach (VectorNode node in grid.GetNeighborVectorNodes(currentNode))
                 {
-                    Debug.Log(node);
+                    //Debug.Log(node);
                     if (node.walkable)
 	                    {
 		                    int cost = currentNode.gCost + GetDist(currentNode, node);
                             if(!closedSet.Contains(node) || node.gCost > cost){
                                 node.parent = currentNode;
                                 node.gCost = cost + node.movementPenalty;
-                                Debug.Log(node.gCost);
+                                //Debug.Log(node.gCost);
                                 if(!openSet.Contains(node) && !closedSet.Contains(node)){
                                     openSet.Enqueue(node);
                                 }

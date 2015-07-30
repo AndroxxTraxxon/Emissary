@@ -119,7 +119,7 @@ namespace Emissary
 
                     int checkX = (int)vectorNode.GridPosition.x + x;
                     int checkY = (int)vectorNode.GridPosition.y + y;
-                    Debug.Log("X: " + checkX + ", Y: " + checkY);
+                    //Debug.Log("X: " + checkX + ", Y: " + checkY);
                     if (checkX >= 0 && checkX < gridSizeX && checkY >= 0 && checkY < gridSizeY)
                     {
                         VectorNodes.Add(GetVectorNodeFromGrid(checkX, checkY));

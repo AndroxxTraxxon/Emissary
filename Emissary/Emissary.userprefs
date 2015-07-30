@@ -1,0 +1,16 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\_Scripts\PathRequestManager.cs">
+    <Files>
+      <File FileName="Assets\_Scripts\VectorField.cs" Line="28" Column="36" />
+      <File FileName="Assets\_Scripts\GridRegion.cs" Line="99" Column="31" />
+      <File FileName="Assets\_Scripts\VectorGrid.cs" Line="220" Column="9" />
+      <File FileName="Assets\_Scripts\AStar.cs" Line="160" Column="2" />
+      <File FileName="Assets\_Scripts\PathRequestManager.cs" Line="55" Column="10" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>
