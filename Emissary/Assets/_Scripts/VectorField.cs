@@ -173,10 +173,10 @@ namespace Emissary
 
                 foreach(VectorNode node in gridDict[location].GetNeighborNodes(currentNode))
                 {
-                    if(!node.walkable || !regions.Contains(node.region))
+                    if(!node.walkable || !(regions.Contains(node.region)||node.region.oriented))
                     {
                         currentNode.OnEdge = true;
-                        currentNode.gCost += 3 * distanceFactor;
+                        currentNode.gCost += distanceFactor;
                         break;
                     }
                 }
@@ -184,7 +184,7 @@ namespace Emissary
                 foreach (VectorNode node in gridDict[location].GetAdjacentNodes(currentNode))
                 {
                     //Debug.Log(node);
-                    if (node.walkable && regions.Contains(node.region))
+                    if (node.walkable && (regions.Contains(node.region) || node.region.oriented))
                     {
                         int cost = currentNode.gCost + distanceFactor;
                         if (!closedSet.Contains(node) || node.gCost > cost)

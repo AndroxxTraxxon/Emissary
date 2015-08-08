@@ -110,6 +110,8 @@ namespace Emissary
                 {
                     //Baseline: Walkable --> white; Not Walkable --> red
                     Gizmos.color = new Color(1 - n.gCost / 255f, 1 - n.gCost / 255f, 1);
+                    if (!n.walkable) Gizmos.color = Color.red;
+                    else if (n.OnEdge) Gizmos.color = Color.green;
                     //Player Position --> cyan
                     Gizmos.DrawCube(n.worldPosition, Vector3.one * (nodeScale * .195f));
                     Gizmos.DrawRay(n.worldPosition, n.flowDirection * nodeScale);
