@@ -8,14 +8,14 @@ namespace Emissary
     public class PathRequestManager : MonoBehaviour
     {
 
-        FilteredQueue<PathRequest> pathRequestQueue = new FilteredQueue<PathRequest>();
+        FilteredQueue<PathRequest> pathRequestQueue;
         PathRequest currentPathRequest;
 
         public static PathRequestManager instance;
         AStar pathfinding;
 		VectorField field;
-        //List<VectorGrid>
-
+        
+        
 		public enum ProcessingState {ProcessingPath, ProcessingGrid, Stopped};
 
 		ProcessingState currentState = ProcessingState.Stopped;
@@ -27,39 +27,100 @@ namespace Emissary
                 return currentPathRequest.RequestID;
             }
         }
+
         void Awake()
         {
+            pathRequestQueue = new FilteredQueue<PathRequest>();
             instance = this;
             pathfinding = GetComponent<AStar>();
+            field = GetComponent<VectorField>();
+            //Debug.Log("PRM Instantiated!");
         }
 
-        public static void RequestPath(Vector3 pathStart, Vector3 pathEnd, Action<Vector3[], bool> callback, out uint ID)
+        public void AddUnitToGrid(Unit unit, Vector3 target)
         {
-            PathRequest newRequest = new PathRequest(pathStart, pathEnd, callback, out ID);
-            instance.pathRequestQueue.Enqueue(newRequest);
-            instance.TryProcessNext();
+            target = field.defaultGrid.GetNodeFromWorldPoint(target).worldPosition;
+            if(field.gridDict.ContainsKey(target) && field.gridDict[target].GetNodeFromWorldPoint(unit.transform.position).region.oriented)
+            {
+                Debug.Log("Grid exists already! Adding unit to existing grid!");
+                Debug.Log(field.gridDict[target].target);
+                unit.AssignToGrid(field.gridDict[target]);
+
+            }
+            else
+            {
+                if (field.gridDict.ContainsKey(target))
+                {
+                    Debug.Log("Regen Grid");
+                    uint ID;
+                    //if this is needed elsewhere, then feed ID to wherever the path ID is needed.
+                    unit.AssignToGrid(field.gridDict[target]);
+                    //field.gridDict[target].assignedUnits.Add(unit);
+                    RequestPath(unit.transform.position, target, GenerateGrid, out ID);
+                    
+                }
+                else
+                {
+                    Debug.Log("NEW GRID INCOMING");
+                    field.GenerateDictionaryDefinition(target);
+                    //Debug.Log(field.gridDict[target]);
+                    uint ID;
+                    //field.gridDict[target].assignedUnits.Add(unit);
+                    
+                    unit.AssignToGrid(field.gridDict[target]);
+                    Debug.Log(field.gridDict[target].assignedUnits.Count);
+                    RequestPath(unit.transform.position, target, GenerateGrid, out ID);
+                    
+                }
+            }
+
         }
 
-        public static void RemoveRequestFromQueue(Vector3 pathStart, Vector3 pathEnd, Action<Vector3[], bool> callback, uint ID)
+        public void RequestPath(Vector3 pathStart, Vector3 pathEnd, Action<Vector3[], bool> callback, out uint ID)
+        {
+                PathRequest newRequest = new PathRequest(pathStart, pathEnd, callback, out ID);
+                instance.pathRequestQueue.Enqueue(newRequest);
+                instance.TryProcessNext(); 
+        }
+
+        public void RemoveRequestFromQueue(Vector3 pathStart, Vector3 pathEnd, Action<Vector3[], bool> callback, uint ID)
         {
             instance.pathRequestQueue.Remove(new PathRequest(pathStart, pathEnd, callback, ID));
         }
+
         void TryProcessNext()
         {
 			if (currentState == ProcessingState.Stopped && pathRequestQueue.Count > 0)
             {
-                currentPathRequest = pathRequestQueue.Dequeue();
                 currentState = ProcessingState.ProcessingPath;
+                currentPathRequest = pathRequestQueue.Dequeue();
                 pathfinding.StartFindPath(currentPathRequest.pathStart, currentPathRequest.pathEnd);
                 //Debug.Log("Current Path ID: " + CurrentPathID);
             }
         }
 
         public void FinishedProcessingPath(Vector3[] path, bool success)
+            //typically what will be called after the path has been found (or not found)
+            //
         {
-            currentPathRequest.callback(path, success);
             currentState = ProcessingState.ProcessingGrid;
+            currentPathRequest.callback(path, success);
+            currentState = ProcessingState.Stopped;
             TryProcessNext();
+        }
+
+        public void GenerateGrid(Vector3[] path, bool success)
+        {
+            if (success)
+            {
+                Debug.Log("Generating Grid");
+                currentState = ProcessingState.ProcessingGrid;
+                //hypothetically, the grid will have already been generated by the time that the code reaches this point. re-initializing will overwrite crucial unit data.
+                //field.gridDict.Add(path[path.Length - 1], VectorField.instance.defaultGrid);
+                StartCoroutine(field.UpdateValues(path));
+                Debug.Log("Target: " + path[path.Length-1]);
+            }
+            currentState = ProcessingState.Stopped;
         }
 
         struct PathRequest

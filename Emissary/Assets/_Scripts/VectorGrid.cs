@@ -5,7 +5,6 @@ namespace Emissary
 {
     public class VectorGrid
     {
-        public bool displayGridGizmos;
         //public Transform player;
         public LayerMask unwalkableMask;
         public Vector2 gridWorldSize;
@@ -16,13 +15,15 @@ namespace Emissary
         public Dictionary<int, int> walkableRegionsDictionary = new Dictionary<int, int>();
         Vector3 RegionStandardSize;
         Vector3 position;
+        public Vector3 target;
         float VectorNodeDiameter;
         public int gridSizeX, gridSizeY;
         List<GridRegion> regionList;
+        public List<Unit> assignedUnits;
 
 
         public VectorGrid(Vector3 position, Vector2 gridSize, float nodeRadius, TerrainType[] walkableAreas, Dictionary<int,int> walkRegDict, LayerMask unwalkableMask){
-            
+
             //taking in the input.
             this.position = position;
             gridWorldSize = gridSize;
@@ -36,6 +37,7 @@ namespace Emissary
             gridSizeX = Mathf.RoundToInt(gridWorldSize.x / VectorNodeDiameter);
             gridSizeY = Mathf.RoundToInt(gridWorldSize.y / VectorNodeDiameter);
             regionList = new List<GridRegion>();
+            assignedUnits = new List<Unit>();
 
             foreach (TerrainType region in walkableRegions)
             {
@@ -47,13 +49,13 @@ namespace Emissary
 
         }
 
-        /*public int MaxSize
+        public int MaxSize
         {
             get
             {
                 return gridSizeX * gridSizeY;
             }
-        }*/
+        }
 
         public void DrawGizmos()
         //draws everything on the screen in the scene view for you. Makes it purty.
@@ -66,7 +68,32 @@ namespace Emissary
             }
         }
 
-        public VectorNode GetVectorNodeFromWorldPoint(Vector3 worldPosition)
+        public bool TryGetNearestWalkableNode(Vector3 worldPosition, out VectorNode node)
+        {
+            node = GetNodeFromWorldPoint(worldPosition);
+            if (node.walkable)
+            {
+                return true;
+            }
+            else
+            {
+                List<VectorNode> nodes = new List<VectorNode>();
+                nodes.AddRange(GetNeighborNodes(node));
+                int count = 0;
+                while(nodes.Count > 0 && count++ < 30)//Change this 30 to how many nodes you want to check before you give up, or take it out if you must find any walkable node.
+                {
+                    node = nodes[0];
+                    if (node.walkable)
+                    {
+                        return true;
+                    }
+                    nodes.RemoveAt(0);
+                }
+            }
+            return false;
+        }
+
+        public VectorNode GetNodeFromWorldPoint(Vector3 worldPosition)
         //returns a VectorNode given a global position.
         {
             float percentX = (worldPosition.x + gridWorldSize.x / 2) / gridWorldSize.x;
@@ -105,7 +132,7 @@ namespace Emissary
             return containingRegion.getNode(x, y);
         }
 
-        public List<VectorNode> GetNeighborVectorNodes(VectorNode vectorNode)
+        public List<VectorNode> GetNeighborNodes(VectorNode node)
         //returns a list of the (up to) eight neighboring VectorNodes, adjacent and diagonal VectorNodes.
         {
             List<VectorNode> VectorNodes = new List<VectorNode>();
@@ -117,8 +144,8 @@ namespace Emissary
                     if (x == 0 && y == 0)
                         continue;
 
-                    int checkX = (int)vectorNode.GridPosition.x + x;
-                    int checkY = (int)vectorNode.GridPosition.y + y;
+                    int checkX = (int)node.GridPosition.x + x;
+                    int checkY = (int)node.GridPosition.y + y;
                     //Debug.Log("X: " + checkX + ", Y: " + checkY);
                     if (checkX >= 0 && checkX < gridSizeX && checkY >= 0 && checkY < gridSizeY)
                     {
@@ -128,6 +155,18 @@ namespace Emissary
             }
 
             return VectorNodes;
+        }
+
+        public List<VectorNode> GetAdjacentNodes(VectorNode node)
+            //returns the list of (up to) four adjacent nodes immediately up, down, left, and right of the input node
+        {
+            List<VectorNode> nodes = new List<VectorNode>();
+            Vector2 nodePos = node.GridPosition;
+            if (nodePos.y < gridSizeY - 1)nodes.Add(GetVectorNodeFromGrid((int)(Vector2.up.x + nodePos.x), (int)(Vector2.up.y + nodePos.y)));
+            if (nodePos.y > 0) nodes.Add(GetVectorNodeFromGrid((int)(Vector2.down.x + nodePos.x), (int)(Vector2.down.y + nodePos.y)));
+            if (nodePos.x < gridSizeY - 1) nodes.Add(GetVectorNodeFromGrid((int)(Vector2.right.x + nodePos.x), (int)(Vector2.right.y + nodePos.y)));
+            if (nodePos.x > 0) nodes.Add(GetVectorNodeFromGrid((int)(Vector2.left.x + nodePos.x), (int)(Vector2.left.y + nodePos.y)));
+            return nodes;
         }
 
         void CreateGrid()
@@ -223,7 +262,7 @@ namespace Emissary
             List<GridRegion> list = new List<GridRegion>();
             foreach (Vector3 loc in path)
             {
-                VectorNode node = GetVectorNodeFromWorldPoint(loc);
+                VectorNode node = GetNodeFromWorldPoint(loc);
                 if (!list.Contains(node.region))
                 {
                     list.Add(node.region);
@@ -231,6 +270,11 @@ namespace Emissary
             }
 
             return list;
+        }
+
+        public override string ToString()
+        {
+            return "V-Grid: Destination " + target;
         }
     }
 

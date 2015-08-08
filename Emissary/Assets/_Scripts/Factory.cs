@@ -22,7 +22,7 @@ namespace Emissary
         {
             BuildQueue.Enqueue(new BuildItem(unit, massCost, energyCost, massRate, energyRate));
             TryBuildNextItem();
-            unit.PM = this.PM;
+            //unit.PM = this.PM;
             foreach (Vector3 loc in pathQueue)
             {
                 unit.FactoryAddPathLocation(loc);
@@ -46,7 +46,7 @@ namespace Emissary
 
             while (currentMass < item.massCost || currentEnergy < item.energyCost)
             {
-                PM.RequestResources(item.massRate * Time.deltaTime, item.energyRate * Time.deltaTime);
+                //PM.RequestResources(item.massRate * Time.deltaTime, item.energyRate * Time.deltaTime);
                 yield return null;
             }
             GameObject unit;

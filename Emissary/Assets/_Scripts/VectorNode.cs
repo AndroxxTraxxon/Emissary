@@ -14,6 +14,7 @@ namespace Emissary
         public int movementPenalty;
         public Vector3 flowDirection;
         public GridRegion region;
+        public bool OnEdge = false;
 
         public int gCost;
         public int hCost;

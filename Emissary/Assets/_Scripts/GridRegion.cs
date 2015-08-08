@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System;
-using System.Collections;
+using System.Collections.Generic;
 
 namespace Emissary
 {
@@ -18,6 +18,12 @@ namespace Emissary
         float nodeScale;
         float nodeRadius;
         Vector3 RegionBottomLeft;
+        public bool oriented
+        {
+            get;
+            set;
+        }
+        public List<Unit> assignedUnits;
 
         public GridRegion(VectorGrid parentGrid)
         {
@@ -96,9 +102,9 @@ namespace Emissary
 
         public void DrawGizmos()
         {
-			Gizmos.color = Color.white;//new Color(GridRegion.rand.Range(0f,1f),GridRegion.rand.Range(0f,1f),GridRegion.rand.Range(0f,1f));
-			Gizmos.DrawWireCube(offset, Vector3.right * width * nodeScale + Vector3.forward * height * nodeScale);
-            if (nodes != null && displayGridGizmos)
+            Gizmos.color = Color.white;//new Color(GridRegion.rand.Range(0f,1f),GridRegion.rand.Range(0f,1f),GridRegion.rand.Range(0f,1f));
+            Gizmos.DrawWireCube(offset, Vector3.right * width * nodeScale + Vector3.forward * height * nodeScale);
+            if (nodes != null && oriented)
             {
                 foreach (VectorNode n in nodes)
                 {
@@ -109,7 +115,8 @@ namespace Emissary
                     Gizmos.DrawRay(n.worldPosition, n.flowDirection * nodeScale);
                 }
 
-            }
+            } 
+
         }
 
         internal VectorGrid GetParentGrid()
@@ -117,7 +124,7 @@ namespace Emissary
             return parentGrid;
         }
 
-        public string ToString()
+        public override string ToString()
         {
             return "Region: " + width + ", " + height;
         }

@@ -102,7 +102,7 @@ namespace Emissary
             }
             else if (Input.GetMouseButtonDown(1))
             {
-                if (PathRequestManager.instance.gameObject.GetComponent<Grid>().getNodeFromWorldPoint(hit.point).walkable)
+                if (VectorField.instance.defaultGrid.GetNodeFromWorldPoint(hit.point).walkable)
                 {
                     if (!shiftPressed)
                     {
@@ -288,9 +288,9 @@ namespace Emissary
         }
     }
 
-    public abstract class Selectable : MonoBehaviour
+    public abstract class Selectable: MonoBehaviour
     {
-        bool selected;
+        protected bool selected;
         internal virtual void Select(){
             selected = true;
         }

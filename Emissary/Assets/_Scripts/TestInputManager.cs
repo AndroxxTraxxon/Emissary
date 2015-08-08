@@ -54,6 +54,7 @@ namespace Emissary
                 if ((Input.mousePosition - initMousePosition).magnitude > 25)
                 {
                     OnMouseDrag();
+                    //Basically, if you're holding the left mouse down, and you're dragging the mouse, begin a box selection
                 }
                 else
                 {
@@ -64,11 +65,9 @@ namespace Emissary
             if (Input.GetMouseButtonDown(0))
                 OnLeftMouseClicked();
             else if (Input.GetMouseButtonDown(1))
-            {
                 OnRightMouseClicked();
-            }
 
-            //Basically, if you're holding the left mouse down, and you're dragging the mouse, begin a box selection
+            
 
             #endregion
 
@@ -174,10 +173,10 @@ namespace Emissary
             }
             else
             {
-                /*if (hit.collider.gameObject.GetComponent<Unit>() != null)
+                if(hit.collider.gameObject.GetComponent<Unit>() != null)
                 {
                     AddUnitToSelection(hit.collider.gameObject.GetComponent<Unit>());
-                }*/
+                }
                 lastClickTime = Time.time;
             }
 
@@ -213,7 +212,7 @@ namespace Emissary
                     go.EnqueuePathLocation(hit.point);
                 }
             }*/
-            field.OrientGrid(hit.point, field.demoGrid);
+            //field.UpdateValues(hit.point, field.demoGrid);
 
         }
 

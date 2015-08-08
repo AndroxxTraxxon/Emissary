@@ -12,7 +12,7 @@ namespace Emissary
         public enum VehicleType { AIR, WATER, GROUND, BUILDING, ENGY };
         public enum UnitState { Stopped, RequestingPath, Moving, Building, Attacking };
         public string UnitID;
-        public PlayerManager PM;
+        //public PlayerManager PM;
         public float speed = 5;
         public UnitState currentState = UnitState.Stopped;
 
@@ -115,7 +115,7 @@ namespace Emissary
                     }
                     else
                     {
-                        PathRequestManager.RemoveRequestFromQueue(transform.position, CurrentTarget, OnPathFound, CurrentRequestID);
+                        PathRequestManager.instance.RemoveRequestFromQueue(transform.position, CurrentTarget, OnPathFound, CurrentRequestID);
                         cancelCurrentPath = false;
                     }
                 }
@@ -133,7 +133,7 @@ namespace Emissary
         {
             CurrentTarget = target;
             currentState = UnitState.RequestingPath;
-            PathRequestManager.RequestPath(transform.position, target, OnPathFound, out CurrentRequestID);
+            PathRequestManager.instance.RequestPath(transform.position, target, OnPathFound, out CurrentRequestID);
         }
 
         public void OnDrawGizmos()

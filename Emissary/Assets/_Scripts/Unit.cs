@@ -12,7 +12,7 @@ namespace Emissary
         public enum VehicleType { AIR, WATER, GROUND, BUILDING, ENGY };
         public enum UnitState { Stopped, RequestingPath, Moving, Building, Attacking };
         public string UnitID;
-        public PlayerManager PM;
+        //public PlayerManager PM;
         public float speed = 5;
         public UnitState currentState = UnitState.Stopped;
 
@@ -20,17 +20,20 @@ namespace Emissary
         protected Queue<Vector3> pathQueue = new Queue<Vector3>();
 
         protected int targetIndex;
-        protected bool selected;
+        //protected bool selected;
         public const float maxHealth = 100f;
         public float health;
         public VehicleType type = VehicleType.GROUND;
         protected bool cancelCurrentPath = false;
         protected uint CurrentRequestID;
         protected VectorGrid currentGrid;
+        public Transform target;
 
         void Start()
         {
             InputManager.instance.AddSelectableUnit(this);
+            //Debug.Log("ADDING THIS TO GRID!");
+            PathRequestManager.instance.AddUnitToGrid(this, target.position);
         }
 
         void Update()
@@ -60,9 +63,35 @@ namespace Emissary
             }
         }
 
-        IEnumerator FollowPath()
+        public void AssignToGrid(VectorGrid grid)
         {
-            yield return null;
+            if (currentGrid != null)
+            {
+                currentGrid.assignedUnits.Remove(this);
+            }
+            currentGrid = grid;
+            currentGrid.assignedUnits.Add(this);
+        }
+        public void InitiateMovement()
+        {
+            StopCoroutine(FollowGrid());
+            StartCoroutine(FollowGrid());
+        }
+
+        public IEnumerator FollowGrid()
+        {
+            VectorNode node;
+            currentGrid.TryGetNearestWalkableNode(transform.position, out node);
+            while (node.gCost > 0)
+            {
+                transform.Translate(node.flowDirection * speed * Time.deltaTime);
+                yield return null;
+                currentGrid.TryGetNearestWalkableNode(transform.position, out node);
+            }
+
+            currentGrid.assignedUnits.Remove(this);
+            currentGrid = null;
+            Debug.Log("Target Acquired!");
         }
 
         public void TryProcessNextPath()
@@ -74,6 +103,8 @@ namespace Emissary
         {
             
         }
+
+
 
         public void RequestPathFromManager(Vector3 target)
         {
@@ -103,7 +134,7 @@ namespace Emissary
 
         public void EnqueuePathLocation(Vector3 target)
         {
-
+            PathRequestManager.instance.AddUnitToGrid(this, target);
         }
 
         public void FactoryAddPathLocation(Vector3 target)

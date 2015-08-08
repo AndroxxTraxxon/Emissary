@@ -10,12 +10,12 @@ namespace Emissary
     {
 
         PathRequestManager requestManager;
-        Grid grid;
+        VectorGrid grid;
         double rootTwo = Math.Sqrt(2);
         void Awake()
         {
             requestManager = GetComponent<PathRequestManager>();
-            grid = GetComponent<Grid>();
+            grid = VectorField.instance.defaultGrid;
         }
 
 
@@ -28,24 +28,20 @@ namespace Emissary
             Vector3[] waypoints = new Vector3[0];
             bool pathSuccess = false;
 
-            Node startNode = grid.getNodeFromWorldPoint(startPos);
-            Node targetNode = grid.getNodeFromWorldPoint(targetPos);
+            VectorNode startNode;
+            VectorNode targetNode;
 
-            if (startPos.Equals(targetPos))
+            if (grid.TryGetNearestWalkableNode(startPos, out startNode) && grid.TryGetNearestWalkableNode(targetPos, out targetNode))
             {
 
-            }
-            else if (startNode.walkable && targetNode.walkable)
-            {
-
-                Heap<Node> openSet = new Heap<Node>(grid.MaxSize);
-                HashSet<Node> closedSet = new HashSet<Node>();
+                Heap<VectorNode> openSet = new Heap<VectorNode>(grid.MaxSize);
+                HashSet<VectorNode> closedSet = new HashSet<VectorNode>();
                 openSet.Add(startNode);
                 //Debug.Log("openSet Count: " + openSet.Count);
                 while (openSet.Count > 0)
                 {
                     //Debug.Log("Entered main Loop!");
-                    Node currentNode = openSet.RemoveFirst();
+                    VectorNode currentNode = openSet.RemoveFirst();
                     closedSet.Add(currentNode);
 
                     if (currentNode == targetNode)
@@ -56,7 +52,7 @@ namespace Emissary
                         break;
                     }
 
-                    foreach (Node neighbor in grid.getNeighborNodes(currentNode))
+                    foreach (VectorNode neighbor in grid.GetNeighborNodes(currentNode))
                     {
                         if (!neighbor.walkable || closedSet.Contains(neighbor))
                         {
@@ -83,7 +79,7 @@ namespace Emissary
             }
 
             yield return null;
-            if (pathSuccess)
+            if (pathSuccess && startNode != null && targetNode != null)
             {
                 waypoints = RetracePath(startNode, targetNode);
             }
@@ -95,11 +91,11 @@ namespace Emissary
 
         }
 
-        public Vector3[] RetracePath(Node startNode, Node endNode)
+        public Vector3[] RetracePath(VectorNode startNode, VectorNode endNode)
         {
             //Debug.Log("Starting Retrace!");
-            List<Node> path = new List<Node>();
-            Node currentNode = endNode;
+            List<VectorNode> path = new List<VectorNode>();
+            VectorNode currentNode = endNode;
             while (currentNode != startNode)
             {
                 path.Add(currentNode);
@@ -115,20 +111,23 @@ namespace Emissary
             //Debug.Log("Finished Retrace!");
         }
 
-        public Vector3[] SimplifyPath(List<Node> path)
+        public Vector3[] SimplifyPath(List<VectorNode> path)
         {
             List<Vector3> waypoints = new List<Vector3>();
 
             waypoints.Add(path[0].worldPosition);
-            /*foreach (Node n in path)
+            foreach (VectorNode n in path)
             {
                 waypoints.Add(n.worldPosition);
-            }/*/
-            Vector2 directionOld = new Vector2(path[1].gridX - path[0].gridX, path[1].gridY - path[0].gridY);
+            }
+
+            //this section that is commented out is 
+            /*
+            Vector2 directionOld = new Vector2(path[1].GridPosition.x - path[0].GridPosition.x, path[1].GridPosition.y - path[0].GridPosition.y);
 
             for (int i = 1; i < path.Count - 1; i++)
             {
-                Vector2 directionNew = new Vector2(path[i + 1].gridX - path[i].gridX, path[i + 1].gridY - path[i].gridY);
+                Vector2 directionNew = new Vector2(path[i + 1].GridPosition.x - path[i].GridPosition.x, path[i + 1].GridPosition.y - path[i].GridPosition.y);
                 if (directionNew != directionOld)
                 {
                     waypoints.Add(path[i].worldPosition);
@@ -138,11 +137,11 @@ namespace Emissary
             return waypoints.ToArray();
         }
 
-        public int GetDist(Node nodeA, Node nodeB)
+        public int GetDist(VectorNode nodeA, VectorNode nodeB)
         //Returns the general distance between two nodes.
         {
-            int distX = Mathf.Abs(nodeA.gridX - nodeB.gridX);
-            int distY = Mathf.Abs(nodeA.gridY - nodeB.gridY);
+            int distX = Mathf.RoundToInt(Mathf.Abs(nodeA.GridPosition.x - nodeB.GridPosition.x));
+            int distY = Mathf.RoundToInt(Mathf.Abs(nodeA.GridPosition.y - nodeB.GridPosition.y));
             if (distX > distY)
             {
                 return (int)(10 * rootTwo * distY + 10 * (distX - distY));
