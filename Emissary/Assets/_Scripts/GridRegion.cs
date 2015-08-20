@@ -112,6 +112,7 @@ namespace Emissary
                     Gizmos.color = new Color(1 - n.gCost / 255f, 1 - n.gCost / 255f, 1);
                     if (!n.walkable) Gizmos.color = Color.red;
                     else if (n.OnEdge) Gizmos.color = Color.green;
+                    else if (n.gCost == 0) Gizmos.color = Color.cyan;
                     //Player Position --> cyan
                     Gizmos.DrawCube(n.worldPosition, Vector3.one * (nodeScale * .195f));
                     Gizmos.DrawRay(n.worldPosition, n.flowDirection * nodeScale);
@@ -136,6 +137,27 @@ namespace Emissary
             get
             {
                 return gridCoords;
+            }
+        }
+
+        internal void ForceDrawGizmos()
+        {
+            Gizmos.color = Color.white;//new Color(GridRegion.rand.Range(0f,1f),GridRegion.rand.Range(0f,1f),GridRegion.rand.Range(0f,1f));
+            Gizmos.DrawWireCube(offset, Vector3.right * width * nodeScale + Vector3.forward * height * nodeScale);
+            if (nodes != null)
+            {
+                foreach (VectorNode n in nodes)
+                {
+                    //Baseline: Walkable --> white; Not Walkable --> red
+                    Gizmos.color = new Color(1 - n.gCost / 255f, 1 - n.gCost / 255f, 1);
+                    if (!n.walkable) Gizmos.color = Color.red;
+                    else if (n.OnEdge) Gizmos.color = Color.green;
+                    else if (n.gCost == 0) Gizmos.color = Color.cyan;
+                    //Player Position --> cyan
+                    Gizmos.DrawCube(n.worldPosition, Vector3.one * (nodeScale * .195f));
+                    Gizmos.DrawRay(n.worldPosition, n.flowDirection * nodeScale);
+                }
+
             }
         }
     }

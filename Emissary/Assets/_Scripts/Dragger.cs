@@ -35,7 +35,7 @@ namespace Emissary
             PathRequestManager.instance.RequestPath(player.position, target.position, this.UpdatePath, out j);
         }
 
-        public void UpdatePath(Vector3[] path, bool successful)
+        public void UpdatePath(Vector3 target, Vector3[] path, bool successful)
         {
             this.path = path;
             this.successful = successful;

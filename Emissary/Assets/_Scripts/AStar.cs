@@ -24,14 +24,15 @@ namespace Emissary
         {
             //Stopwatch sw = new Stopwatch();
             //sw.Start();
-
             Vector3[] waypoints = new Vector3[0];
             bool pathSuccess = false;
 
             VectorNode startNode;
             VectorNode targetNode;
+            bool startFound = grid.TryGetNearestWalkableNode(startPos, out startNode);
+            bool endFound = grid.TryGetNearestWalkableNode(targetPos, out targetNode);
 
-            if (grid.TryGetNearestWalkableNode(startPos, out startNode) && grid.TryGetNearestWalkableNode(targetPos, out targetNode))
+            if (startFound && endFound)
             {
 
                 Heap<VectorNode> openSet = new Heap<VectorNode>(grid.MaxSize);
@@ -79,7 +80,7 @@ namespace Emissary
             }
 
             yield return null;
-            if (pathSuccess && startNode != null && targetNode != null)
+            if (pathSuccess && startFound && endFound)
             {
                 waypoints = RetracePath(startNode, targetNode);
             }
@@ -87,7 +88,7 @@ namespace Emissary
             {
                 pathSuccess = false;
             }
-            requestManager.FinishedProcessingPath(waypoints, pathSuccess);
+            requestManager.FinishedProcessingPath(targetPos, waypoints, pathSuccess);
 
         }
 

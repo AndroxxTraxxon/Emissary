@@ -19,7 +19,6 @@ namespace Emissary
     public class VectorField : MonoBehaviour 
     {
         static double rootTwo = Mathf.Sqrt(2f);
-        public VectorGrid defaultGrid;
         public Vector2 worldSize;
         private Vector3 lastTarget;
         public float nodeRadius;
@@ -33,12 +32,19 @@ namespace Emissary
         public static VectorField instance;
 
         // Use this for initialization
+        public VectorGrid defaultGrid
+        {
+            get
+            {
+                return gridDict[Vector3.zero];
+            }
+        }
         void Awake () {
             instance = this;
             gridDict = new Dictionary<Vector3, VectorGrid>();
             ActiveTargets = new List<Vector3>();
-            defaultGrid = new VectorGrid(transform.position, worldSize, nodeRadius, walkableRegions, walkableRegionsDictionary, unwalkableMask);
-
+            GenerateDictionaryDefinition(Vector3.zero);
+            UpdateValues(Vector3.zero);
         }
 
         // Update is called once per frame
@@ -56,58 +62,67 @@ namespace Emissary
             //Debug.Log(gridDict[location]);
         }
 
-        public IEnumerator UpdateValues(Vector3 target)
+        public IEnumerator UpdateValues(Vector3 Target)
         {
-            lastTarget = target;
-            gridDict[target].target = target;
+            lastTarget = Target;
+            gridDict[Target].target = Target;
             //VectorGrid grid = gridDict[target];
-            int floorX = Mathf.FloorToInt(target.x) + 1;
-            int ceilX = Mathf.CeilToInt(target.x) + 1;
-            int floorZ = Mathf.FloorToInt(target.z) + 1;
-            int ceilZ = Mathf.CeilToInt(target.z) + 1;
+            float floorX = Target.x - nodeRadius;
+            float ceilX = Target.x + nodeRadius;
+            float floorZ = Target.z - nodeRadius;
+            float ceilZ = Target.z + nodeRadius;
             if (floorX == ceilX)
             {
-                //ceilX++;
+                Debug.Log("The X's are the same!");
             }
             if (floorZ == ceilZ)
             {
-                //ceilZ++;
+                Debug.Log("The Z's are the same!");
             }
 
             Queue<VectorNode> openSet = new Queue<VectorNode>();
             HashSet<VectorNode> closedSet = new HashSet<VectorNode>();
-            foreach(GridRegion region in gridDict[target].regions)
+            foreach(GridRegion region in gridDict[Target].regions)
             {
                 region.oriented = true;
             }
-            VectorNode targetNode = gridDict[target].GetNodeFromWorldPoint(new Vector3(floorX, 0, floorZ));
+            VectorNode targetNode = gridDict[Target].GetNodeFromWorldPoint(new Vector3(floorX, 0, floorZ));
             //Debug.Log(targetNode);
             targetNode.gCost = 0;
             openSet.Enqueue(targetNode);
-            targetNode = gridDict[target].GetNodeFromWorldPoint(new Vector3(floorX, 0, ceilZ));
-            if (openSet.Contains(targetNode))
+            targetNode = gridDict[Target].GetNodeFromWorldPoint(new Vector3(floorX, 0, ceilZ));
+            if (!openSet.Contains(targetNode))
+            {
+                targetNode.gCost = 0;
                 openSet.Enqueue(targetNode);
-            targetNode = gridDict[target].GetNodeFromWorldPoint(new Vector3(ceilX, 0, floorZ));
-            if (openSet.Contains(targetNode))
+            }
+            targetNode = gridDict[Target].GetNodeFromWorldPoint(new Vector3(ceilX, 0, floorZ));
+            if (!openSet.Contains(targetNode))
+            {
+                targetNode.gCost = 0;
                 openSet.Enqueue(targetNode);
-            targetNode = gridDict[target].GetNodeFromWorldPoint(new Vector3(ceilX, 0, ceilZ));
-            if (openSet.Contains(targetNode))
+            }
+            targetNode = gridDict[Target].GetNodeFromWorldPoint(new Vector3(ceilX, 0, ceilZ));
+            if (!openSet.Contains(targetNode))
+            {
+                targetNode.gCost = 0;
                 openSet.Enqueue(targetNode);
+            }
             yield return null;
             while (openSet.Count > 0)
             {
                 VectorNode currentNode = openSet.Dequeue();
                 closedSet.Add(currentNode);
-                foreach (VectorNode node in gridDict[target].GetAdjacentNodes(currentNode))
+                foreach (VectorNode node in gridDict[Target].GetAdjacentNodes(currentNode))
                 {
 
                     //Debug.Log(node);
                     if (node.walkable)
                     {
                         int cost = currentNode.gCost + distanceFactor;
-                        if (!closedSet.Contains(node) || node.gCost > cost)
+                        if (!closedSet.Contains(node) || node.gCost >= cost)
                         {
-                            node.parent = currentNode;
+                            //node.parent = currentNode;
                             node.gCost = cost + node.movementPenalty;
                             //Debug.Log(node.gCost);
                             if (!openSet.Contains(node) && !closedSet.Contains(node))
@@ -119,49 +134,50 @@ namespace Emissary
                 }
             }
             yield return null;
-            OrientGrid(gridDict[target], closedSet);
+            OrientGrid(gridDict[Target], closedSet);
             yield return null;
-            foreach(Unit unit in gridDict[target].assignedUnits)
+            foreach(Unit unit in gridDict[Target].assignedUnits)
             {
                 unit.InitiateMovement();
             }
         }
 
-        public IEnumerator UpdateValues(Vector3[] path)
+        public IEnumerator UpdateValues(Vector3 Target, Vector3[] path)
         {
-            Vector3 location = path[path.Length - 1];
-            lastTarget = location;
-            gridDict[location].target = location;
-            List<GridRegion> regions = gridDict[location].listRegionsAlongPath(path);
-            int floorX = Mathf.FloorToInt(location.x) + 1;
-            int ceilX = Mathf.CeilToInt(location.x) + 1;
-            int floorZ = Mathf.FloorToInt(location.z) + 1;
-            int ceilZ = Mathf.CeilToInt(location.z) + 1;
+            lastTarget = Target;
+            gridDict[Target].target = Target;
+            List<GridRegion> regions = gridDict[Target].listRegionsAlongPath(path);
+            float floorX = Target.x;
+            float ceilX = Target.x + nodeRadius*2.5f;
+            float floorZ = Target.z;
+            float ceilZ = Target.z + nodeRadius*2.5f;
             if (floorX == ceilX)
             {
-                //ceilX++;
+                Debug.Log("The X's are the same!");
             }
             if (floorZ == ceilZ)
             {
-                //ceilZ++;
+                Debug.Log("The Z's are the same!");
             }
 
             Queue<VectorNode> openSet = new Queue<VectorNode>();
             HashSet<VectorNode> closedSet = new HashSet<VectorNode>();
-            VectorNode targetNode = gridDict[location].GetNodeFromWorldPoint(new Vector3(floorX, location.y, floorZ));
+            VectorNode targetNode = gridDict[Target].GetNodeFromWorldPoint(new Vector3(floorX, 0, floorZ));
             //Debug.Log(targetNode);
             targetNode.gCost = 0;
             openSet.Enqueue(targetNode);
-            targetNode = gridDict[location].GetNodeFromWorldPoint(new Vector3(floorX, location.y, ceilZ));
-            if (openSet.Contains(targetNode))
+            /*
+            targetNode = gridDict[Target].GetNodeFromWorldPoint(new Vector3(floorX, 0, ceilZ));
+                targetNode.gCost = 0;
                 openSet.Enqueue(targetNode);
-            targetNode = gridDict[location].GetNodeFromWorldPoint(new Vector3(ceilX, location.y, floorZ));
-            if (openSet.Contains(targetNode))
+            targetNode = gridDict[Target].GetNodeFromWorldPoint(new Vector3(ceilX, 0, floorZ));
+                targetNode.gCost = 0;
                 openSet.Enqueue(targetNode);
-            targetNode = gridDict[location].GetNodeFromWorldPoint(new Vector3(ceilX, location.y, ceilZ));
-            if (openSet.Contains(targetNode))
-                openSet.Enqueue(targetNode);
-            foreach (GridRegion region in gridDict[location].listRegionsAlongPath(path))
+            targetNode = gridDict[Target].GetNodeFromWorldPoint(new Vector3(ceilX, 0, ceilZ));
+                targetNode.gCost = 0;
+                openSet.Enqueue(targetNode);*/
+            yield return null;
+            foreach (GridRegion region in gridDict[Target].listRegionsAlongPath(path))
             {
                 region.oriented = true;
             }
@@ -171,22 +187,31 @@ namespace Emissary
                 VectorNode currentNode = openSet.Dequeue();
                 closedSet.Add(currentNode);
 
-                foreach(VectorNode node in gridDict[location].GetNeighborNodes(currentNode))
+                currentNode.OnEdge = false;
+
+
+                foreach(VectorNode node in gridDict[Target].GetNeighborNodes(currentNode))
                 {
                     if(!node.walkable || !(regions.Contains(node.region)||node.region.oriented))
                     {
                         currentNode.OnEdge = true;
-                        currentNode.gCost += distanceFactor;
                         break;
                     }
                 }
 
-                foreach (VectorNode node in gridDict[location].GetAdjacentNodes(currentNode))
+                if (currentNode.GridPosition.x == 0 || currentNode.GridPosition.y == 0 || currentNode.GridPosition.x >= defaultGrid.gridSizeX-1 || currentNode.GridPosition.y >= defaultGrid.gridSizeY-1)
+                    currentNode.OnEdge = true;
+                if (currentNode.OnEdge)
+                {
+                    currentNode.gCost += distanceFactor;
+                }
+
+                foreach (VectorNode node in gridDict[Target].GetAdjacentNodes(currentNode))
                 {
                     //Debug.Log(node);
                     if (node.walkable && (regions.Contains(node.region) || node.region.oriented))
                     {
-                        int cost = currentNode.gCost + distanceFactor;
+                        int cost = currentNode.gCost + distanceFactor;// + ((currentNode.OnEdge)?:);
                         if (!closedSet.Contains(node) || node.gCost > cost)
                         {
                             node.parent = currentNode;
@@ -201,12 +226,12 @@ namespace Emissary
                 }
             }
             yield return null;
-            OrientGrid(gridDict[location], closedSet);
+            OrientGrid(gridDict[Target], closedSet);
             yield return null;
             //Debug.Log(gridDict[location]);
-            Debug.Log(gridDict[location].assignedUnits.Count + " Unit" + ((gridDict[location].assignedUnits.Count==1)?"":"s") + " assigned to this grid.");
-
-            foreach (Unit unit in gridDict[location].assignedUnits)
+            Debug.Log(gridDict[Target].assignedUnits.Count + " Unit" + ((gridDict[Target].assignedUnits.Count==1)?"":"s") + " assigned to this grid.");
+            Debug.Log("Sending Unit!");
+            foreach (Unit unit in gridDict[Target].assignedUnits)
             {
                 unit.InitiateMovement();
             }
@@ -220,22 +245,22 @@ namespace Emissary
             {
                 for (int y = 0; y < grid.gridSizeY; y++)
                 {
-                    if (closedSet.Contains(grid.GetVectorNodeFromGrid(x, y)))
+                    if (closedSet.Contains(grid.GetNode(x, y)))
                     {
                         int up, down, left, right;
                         int upY, downY, leftX, rightX;
-                        leftX = (x >= 1 && grid.GetVectorNodeFromGrid(x - 1, y).region.oriented && grid.GetVectorNodeFromGrid(x - 1, y).walkable) ? x - 1 : x;
-                        rightX = (x < grid.gridSizeX - 1 && grid.GetVectorNodeFromGrid(x + 1, y).region.oriented && grid.GetVectorNodeFromGrid(x + 1, y).walkable) ? x + 1 : x;
-                        upY = (y >= 1 && grid.GetVectorNodeFromGrid(x, y - 1).region.oriented && grid.GetVectorNodeFromGrid(x, y - 1).walkable) ? y - 1 : y;
-                        downY = (y < grid.gridSizeY - 1 && grid.GetVectorNodeFromGrid(x, y + 1).region.oriented && grid.GetVectorNodeFromGrid(x, y + 1).walkable) ? y + 1 : y;
+                        leftX = (x >= 1 && grid.GetNode(x - 1, y).region.oriented && grid.GetNode(x - 1, y).walkable) ? x - 1 : x;
+                        rightX = (x < grid.gridSizeX - 1 && grid.GetNode(x + 1, y).region.oriented && grid.GetNode(x + 1, y).walkable) ? x + 1 : x;
+                        upY = (y >= 1 && grid.GetNode(x, y - 1).region.oriented && grid.GetNode(x, y - 1).walkable) ? y - 1 : y;
+                        downY = (y < grid.gridSizeY - 1 && grid.GetNode(x, y + 1).region.oriented && grid.GetNode(x, y + 1).walkable) ? y + 1 : y;
 
-                        up = grid.GetVectorNodeFromGrid(x, upY).gCost;
-                        down = grid.GetVectorNodeFromGrid(x, downY).gCost;
-                        left = grid.GetVectorNodeFromGrid(leftX, y).gCost;
-                        right = grid.GetVectorNodeFromGrid(rightX, y).gCost;
+                        up = grid.GetNode(x, upY).gCost;
+                        down = grid.GetNode(x, downY).gCost;
+                        left = grid.GetNode(leftX, y).gCost;
+                        right = grid.GetNode(rightX, y).gCost;
                         float factor = 1f / Mathf.Sqrt(4 * (Mathf.Pow(left - right, 2) + Mathf.Pow(down - up, 2)));
                         Vector3 direction = new Vector3(left - right, 0f, up - down) * factor;
-                        grid.GetVectorNodeFromGrid(x, y).flowDirection = direction;
+                        grid.GetNode(x, y).flowDirection = direction;
 
                     }
                 }
@@ -256,9 +281,16 @@ namespace Emissary
 
         void OnDrawGizmos()
         {
-            if (displayGridGizmos)
+            if (displayGridGizmos && gridDict != null)
             {
-                gridDict[lastTarget].DrawGizmos();
+                if (gridDict.Count > 0)
+                {
+                    gridDict[lastTarget].DrawGizmos(); 
+                }
+                else
+                {
+                    defaultGrid.ForceDrawGizmos();
+                }
             }
 
         }

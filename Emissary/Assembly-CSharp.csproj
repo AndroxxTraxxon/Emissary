@@ -47,8 +47,6 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\_Scripts\AStar.cs" />
-     <Compile Include="Assets\_Scripts\AStarInputManager.cs" />
-     <Compile Include="Assets\_Scripts\AStarUnit.cs" />
      <Compile Include="Assets\_Scripts\Draggable.cs" />
      <Compile Include="Assets\_Scripts\Dragger.cs" />
      <Compile Include="Assets\_Scripts\Factory.cs" />

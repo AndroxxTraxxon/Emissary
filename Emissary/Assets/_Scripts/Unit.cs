@@ -68,6 +68,7 @@ namespace Emissary
             if (currentGrid != null)
             {
                 currentGrid.assignedUnits.Remove(this);
+                StopCoroutine(FollowGrid());
             }
             currentGrid = grid;
             currentGrid.assignedUnits.Add(this);
@@ -81,17 +82,20 @@ namespace Emissary
         public IEnumerator FollowGrid()
         {
             VectorNode node;
+
+            //int targetCost = currentGrid.GetNodeFromWorldPoint(currentGrid.target).movementPenalty;
             currentGrid.TryGetNearestWalkableNode(transform.position, out node);
-            while (node.gCost > 0)
+            while (currentGrid != null && node.gCost == 0)
             {
                 transform.Translate(node.flowDirection * speed * Time.deltaTime);
                 yield return null;
-                currentGrid.TryGetNearestWalkableNode(transform.position, out node);
+                currentGrid.TryGetNearestOrientedWalkableNode(transform.position, out node);
             }
 
             currentGrid.assignedUnits.Remove(this);
             currentGrid = null;
             Debug.Log("Target Acquired!");
+            yield return null;
         }
 
         public void TryProcessNextPath()

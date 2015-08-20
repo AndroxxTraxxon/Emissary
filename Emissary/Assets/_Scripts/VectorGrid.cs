@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 namespace Emissary
 {
@@ -57,16 +58,7 @@ namespace Emissary
             }
         }
 
-        public void DrawGizmos()
-        //draws everything on the screen in the scene view for you. Makes it purty.
-        {
-            //Draw the bounding box of the grid view.
-            Gizmos.DrawWireCube(position, new Vector3(gridWorldSize.x, 1, gridWorldSize.y));
-            foreach (GridRegion region in regions)
-            {
-                region.DrawGizmos();
-            }
-        }
+        
 
         public bool TryGetNearestWalkableNode(Vector3 worldPosition, out VectorNode node)
         {
@@ -77,19 +69,62 @@ namespace Emissary
             }
             else
             {
-                List<VectorNode> nodes = new List<VectorNode>();
-                nodes.AddRange(GetNeighborNodes(node));
-                int count = 0;
-                while(nodes.Count > 0 && count++ < 30)//Change this 30 to how many nodes you want to check before you give up, or take it out if you must find any walkable node.
+                Queue<VectorNode> nodes = new Queue<VectorNode>();
+                foreach(VectorNode vn in GetAdjacentNodes(node))
                 {
-                    node = nodes[0];
+                    nodes.Enqueue(vn);
+                }
+                int radius = 2;//this value will change how far the unit looks for neighboring nodes. 
+                int count = 0;
+                while(nodes.Count > 0 && count++ < (Mathf.Pow(2 * radius + 1, 2)-1))
+                {
+                    node = nodes.Dequeue();
                     if (node.walkable)
                     {
                         return true;
                     }
-                    nodes.RemoveAt(0);
+
+                    foreach (VectorNode vn in GetAdjacentNodes(node))
+                    {
+                        nodes.Enqueue(vn);
+                    }
                 }
             }
+            Debug.Log("This node can't find a friend around here!");
+            return false;
+        }
+
+        public bool TryGetNearestOrientedWalkableNode(Vector3 worldPosition, out VectorNode node)
+        {
+            node = GetNodeFromWorldPoint(worldPosition);
+            if (node.walkable && node.region.oriented)
+            {
+                return true;
+            }
+            else
+            {
+                Queue<VectorNode> nodes = new Queue<VectorNode>();
+                foreach (VectorNode vn in GetAdjacentNodes(node))
+                {
+                    nodes.Enqueue(vn);
+                }
+                int radius = 2;//this value will change how far the unit looks for neighboring nodes. 
+                int count = 0;
+                while (nodes.Count > 0 && count++ < (Mathf.Pow(2 * radius + 1, 2) - 1))
+                {
+                    node = nodes.Dequeue();
+                    if (node.walkable && node.region.oriented)
+                    {
+                        return true;
+                    }
+
+                    foreach (VectorNode vn in GetAdjacentNodes(node))
+                    {
+                        nodes.Enqueue(vn);
+                    }
+                }
+            }
+            Debug.Log("This node can't find a friend around here!");
             return false;
         }
 
@@ -104,34 +139,32 @@ namespace Emissary
             int x = Mathf.RoundToInt((gridSizeX - 1) * percentX);
             int y = Mathf.RoundToInt((gridSizeY - 1) * percentY);
             //Debug.Log("Grid Position: " + x + ", " + y);
-            return GetVectorNodeFromGrid(x, y);
+            return GetNode(x, y);
         }
 
-        public VectorNode GetVectorNodeFromGrid(int x, int y)
+        public VectorNode GetNode(int x, int y)
             //returns node at grid location x,y 
         {
-            int regionX = x / 16;
-            int regionY = y / 16;
+            int regionX = x / GridRegion.STANDARD_SIZE;
+            int regionY = y / GridRegion.STANDARD_SIZE;
             //Debug.Log("Region: " + regionX + ", " + regionY);
             //Debug.Log(regions[regionX, regionY].ToString());
-            x = x % 16;
-            y = y % 16;
+            x = x % GridRegion.STANDARD_SIZE;
+            y = y % GridRegion.STANDARD_SIZE;
             //Debug.Log("Region Position: " + x + ", " + y);
            // Debug.Log(regions[regionX, regionY].getNode(x, y));
             return this.regions[regionX, regionY].getNode(x, y);
         }
 
-        public VectorNode GetVectorNodeFromGrid(int x, int y, out GridRegion containingRegion)
-            //returns the node at grid location x,y and sets containingRegion to the region which contains said node
+        public VectorNode GetNode(float x, float y)
         {
-            int regionX = x / 16;
-            int regionY = y / 16;
-            x = x % 16;
-            y = y % 16;
-            containingRegion = this.regions[regionX, regionY];
-            return containingRegion.getNode(x, y);
+            return GetNode((int)x, (int)y);
         }
 
+        public VectorNode GetNode(Vector2 Position)
+        {
+            return GetNode(Position.x, Position.y);
+        }
         public List<VectorNode> GetNeighborNodes(VectorNode node)
         //returns a list of the (up to) eight neighboring VectorNodes, adjacent and diagonal VectorNodes.
         {
@@ -149,7 +182,7 @@ namespace Emissary
                     //Debug.Log("X: " + checkX + ", Y: " + checkY);
                     if (checkX >= 0 && checkX < gridSizeX && checkY >= 0 && checkY < gridSizeY)
                     {
-                        VectorNodes.Add(GetVectorNodeFromGrid(checkX, checkY));
+                        VectorNodes.Add(GetNode(checkX, checkY));
                     }
                 }
             }
@@ -162,10 +195,10 @@ namespace Emissary
         {
             List<VectorNode> nodes = new List<VectorNode>();
             Vector2 nodePos = node.GridPosition;
-            if (nodePos.y < gridSizeY - 1)nodes.Add(GetVectorNodeFromGrid((int)(Vector2.up.x + nodePos.x), (int)(Vector2.up.y + nodePos.y)));
-            if (nodePos.y > 0) nodes.Add(GetVectorNodeFromGrid((int)(Vector2.down.x + nodePos.x), (int)(Vector2.down.y + nodePos.y)));
-            if (nodePos.x < gridSizeY - 1) nodes.Add(GetVectorNodeFromGrid((int)(Vector2.right.x + nodePos.x), (int)(Vector2.right.y + nodePos.y)));
-            if (nodePos.x > 0) nodes.Add(GetVectorNodeFromGrid((int)(Vector2.left.x + nodePos.x), (int)(Vector2.left.y + nodePos.y)));
+            if (nodePos.y < gridSizeY - 1)nodes.Add(GetNode((int)(Vector2.up.x + nodePos.x), (int)(Vector2.up.y + nodePos.y)));
+            if (nodePos.y > 0) nodes.Add(GetNode((int)(Vector2.down.x + nodePos.x), (int)(Vector2.down.y + nodePos.y)));
+            if (nodePos.x < gridSizeY - 1) nodes.Add(GetNode((int)(Vector2.right.x + nodePos.x), (int)(Vector2.right.y + nodePos.y)));
+            if (nodePos.x > 0) nodes.Add(GetNode((int)(Vector2.left.x + nodePos.x), (int)(Vector2.left.y + nodePos.y)));
             return nodes;
         }
 
@@ -247,7 +280,7 @@ namespace Emissary
         public GridRegion GetRegionFromGridLocation(int gridX, int gridY)
             //returns the region that contains the node with location x,y
         {
-            return GetVectorNodeFromGrid(gridX, gridY).region;
+            return GetNode(gridX, gridY).region;
         }
 
         public List<GridRegion> listRegions()
@@ -275,6 +308,36 @@ namespace Emissary
         public override string ToString()
         {
             return "V-Grid: Destination " + target;
+        }
+
+        public void DrawGizmos()
+        //draws everything on the screen in the scene view for you. Makes it purty.
+        {
+            //Draw the bounding box of the grid view.
+            Gizmos.DrawWireCube(position, new Vector3(gridWorldSize.x, 1, gridWorldSize.y));
+            foreach (GridRegion region in regions)
+            {
+                region.DrawGizmos();
+            }
+            if(target != null)
+            {
+                Gizmos.color = Color.cyan;
+                Gizmos.DrawCube(target, Vector3.one * (VectorNodeRadius));
+            }
+        }
+
+        internal void ForceDrawGizmos()
+        {
+            Gizmos.DrawWireCube(position, new Vector3(gridWorldSize.x, 1, gridWorldSize.y));
+            foreach (GridRegion region in regions)
+            {
+                region.ForceDrawGizmos();
+            }
+            if (target != null)
+            {
+                Gizmos.color = Color.cyan;
+                Gizmos.DrawCube(target, Vector3.one * (VectorNodeRadius));
+            }
         }
     }
 
