@@ -21,8 +21,8 @@ namespace Emissary
 
         protected int targetIndex;
         //protected bool selected;
-        public const float maxHealth = 100f;
-        public float health;
+        //public const float maxHealth = 100f;
+        //public float health;
         public VehicleType type = VehicleType.GROUND;
         protected bool cancelCurrentPath = false;
         protected uint CurrentRequestID;

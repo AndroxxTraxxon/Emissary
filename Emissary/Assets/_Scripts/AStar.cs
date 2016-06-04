@@ -55,7 +55,7 @@ namespace Emissary
 
                     foreach (VectorNode neighbor in grid.GetNeighborNodes(currentNode))
                     {
-                        if (!neighbor.walkable || closedSet.Contains(neighbor))
+                        if (!neighbor.walkable)
                         {
                             continue;
                         }
